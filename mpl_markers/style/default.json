@@ -1,0 +1,41 @@
+{
+    "xline": {
+        "linewidth": 0.5,
+        "color": "r"
+    },
+    "yline": {
+        "linewidth": 0.5,
+        "color": "r"
+    },
+    "xlabel": {
+        "fontsize": 8,
+        "color": "black",
+        "bbox": {
+            "boxstyle": "round",
+            "facecolor": "white",
+            "edgecolor": "black",
+            "alpha": 1,
+            "linewidth": 1.6
+        }
+    },
+    "ylabel": {
+        "fontsize": 8,
+        "bbox": {
+            "boxstyle": "round",
+            "facecolor": "white",
+            "edgecolor": "black",
+            "alpha": 1,
+            "linewidth": 1.6
+        }
+    },
+    "xydot": {
+        "markersize": 10,
+        "marker": "."
+    },
+    "xymark": {
+        "markersize": 10,
+        "marker": ".",
+        "markerfacecolor":"white", 
+        "markeredgecolor":"red"
+    }
+}
