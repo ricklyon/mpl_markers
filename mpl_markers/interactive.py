@@ -81,7 +81,7 @@ def onrelease(event):
         markers.set_active(axes, m)
         markers.draw_all(axes)
     elif active_marker is not None:
-        markers.move_active(x, y, axes=axes)
+        markers.move_active(x, y, axes=axes, call_handler=True)
         markers.draw_active(axes)
     else:
         return
