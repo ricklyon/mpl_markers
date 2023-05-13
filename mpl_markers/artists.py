@@ -16,7 +16,7 @@ class AbstractArtist(object):
         self.set_visible(False)
         self._hidden = False
 
-    def draw(self, renderer=None):
+    def draw_artist(self, renderer=None):
         """Draw each artist associated with marker."""
 
         if self._hidden:
@@ -157,7 +157,7 @@ class MarkerArtist(object):
 
     def draw(self):
         """Draw each artist associated with marker."""
-        [obj.draw() for obj in self._artists if obj]
+        [obj.draw_artist() for obj in self._artists if obj]
             
 
     def set_hidden(self, state):

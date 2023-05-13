@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mpl-markers"
-version = "0.0.1"
+version = "0.0.3"
 description = "interactive marker support for matplotlib"
 readme = "README.md"
 authors = [{ name = "Rick Lyon", email = "rlyon14@gmail.com" }]
@@ -26,7 +26,6 @@ dev = ["black", "flake8", "pytest"]
 
 [tool.setuptools.packages.find]
 include = ["mpl_markers"]
-exclude = ["debug"]
 
 [project.urls]
 repository = "https://github.com/ricklyon/mpl_markers"
