@@ -35,7 +35,7 @@ ax.xaxis.set_major_formatter(lambda x, pos: '{:.2f}$\pi$'.format(x/np.pi))
 mplm.axis_marker(x=0, y=-0.2)
 ```
 
-![example2](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example1.gif)
+![example2](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example2.gif)
 
 ## License
 
