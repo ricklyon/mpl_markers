@@ -27,7 +27,7 @@ ax.plot(x1, np.sin(x1)*np.cos(x1)**2)
 
 mplm.data_marker(x=0)
 ```
-![](docs/img/example1.gif)
+![](https://github.com/ricklyon/mpl_markers/blob/main/docs/img/example1.gif)
 
 Add an axis marker that moves freely on the canvas:
 ```python
@@ -35,7 +35,7 @@ ax.xaxis.set_major_formatter(lambda x, pos: '{:.2f}$\pi$'.format(x/np.pi))
 mplm.axis_marker(x=0, y=-0.2)
 ```
 
-![](docs/img/example2.gif)
+![](https://github.com/ricklyon/mpl_markers/blob/main/docs/img/example2.gif)
 
 ## License
 
