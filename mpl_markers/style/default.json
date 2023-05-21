@@ -1,31 +1,33 @@
 {
     "xline": {
-        "linewidth": 0.5,
-        "color": "r"
+        "linewidth": 0.6,
+        "color": "k",
+        "linestyle": "dashed"
     },
     "yline": {
-        "linewidth": 0.5,
-        "color": "r"
+        "linewidth": 0.6,
+        "color": "k",
+        "linestyle": "dashed"
     },
     "xlabel": {
         "fontsize": 8,
         "color": "black",
         "bbox": {
-            "boxstyle": "round",
+            "boxstyle": "square",
             "facecolor": "white",
             "edgecolor": "black",
             "alpha": 1,
-            "linewidth": 1.6
+            "linewidth": 1.5
         }
     },
     "ylabel": {
         "fontsize": 8,
         "bbox": {
-            "boxstyle": "round",
+            "boxstyle": "square",
             "facecolor": "white",
             "edgecolor": "black",
             "alpha": 1,
-            "linewidth": 1.6
+            "linewidth": 1.5
         }
     },
     "xydot": {
@@ -36,6 +38,6 @@
         "markersize": 10,
         "marker": ".",
         "markerfacecolor":"white", 
-        "markeredgecolor":"red"
+        "markeredgecolor":"k"
     }
 }

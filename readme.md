@@ -20,6 +20,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 plt.style.use('ggplot')
+plt.rc('font', size=7)
+
 fig, ax = plt.subplots(1,1)
 x1 = np.linspace(-2*np.pi, 2*np.pi, 1000)
 

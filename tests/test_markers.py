@@ -78,10 +78,10 @@ class TestStringMethods(unittest.TestCase):
         # set marker to angle. The xdata for the marker is the real component of d, so to set the angle we need to specify the index
         angle = 3/4
 
-        def yfmt(x, y, **kwargs):
-            return '{:.3f}$\pi$'.format(x)
+        def yfmt(x, y, idx):
+            return '{:.3f}$\pi$'.format(y)
 
-        def xfmt(x, y, **kwargs):
+        def xfmt(x, y, idx):
             return '{:.3f}$\pi$'.format(x)
 
         m = mplm.data_marker(x=angle, yline=True, alias_xdata=x1_pi, yformatter=yfmt, xformatter=xfmt)

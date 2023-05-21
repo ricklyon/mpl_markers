@@ -211,7 +211,6 @@ def axis_marker(
     if yformatter is None and axes._marker_yformatter:
         yformatter = axes._marker_yformatter
 
-    # TODO: add hollow circle where lines intersect
     m = artists.AxisLabel(axes, xlabel_formatter=xformatter, ylabel_formatter=yformatter, ref_marker=ref_marker, **properties)
     m.set_position(x, y)
 

@@ -12,36 +12,52 @@ def axes2display(axes, point):
 def display2data(axes, point):
     return axes.transData.inverted().transform(point)
 
-def yformatter(xd: float, yd: float, idx: int=None, axes: Axes=None) -> str:
+def yformatter(xd: float, yd: float, idx: int, axes: Axes, custom: Callable= None) -> str:
     """
     Returns a formatted string for the y-label marker at the data points xd, yd.
     """
-    yformatter = axes.yaxis.get_major_formatter()
+    tick_yformatter = axes.yaxis.get_major_formatter()
     ret = ""
-    
+
+    if custom:
+        # try calling with the x, y data points first
+        try:
+            return custom(xd, yd, idx)
+        # call with just the y-data if above failed
+        except TypeError:
+            return custom(yd)
+
     # use ticker formatter if scalar or fixed formatter
     if (
-        not isinstance(yformatter, (ticker.ScalarFormatter, ticker.FixedFormatter))
+        not isinstance(tick_yformatter, (ticker.ScalarFormatter, ticker.FixedFormatter))
     ):
-        ret = yformatter(yd)
+        ret = tick_yformatter(yd)
 
     # otherwise default to basic format
     if not len(ret):
         return "{:.3f}".format(yd)
 
 
-def xformatter(xd:float, idx: int=None, axes: Axes=None) -> str:
+def xformatter(xd: float, yd: float, idx: int, axes: Axes, custom: Callable= None) -> str:
     """
     Returns a formatted string for the x-label marker at the data point xd.
     """
-    xformatter = axes.xaxis.get_major_formatter()
+    tick_xformatter = axes.xaxis.get_major_formatter()
     ret = ""
+
+    if custom:
+        # try calling with the x, y data points first
+        try:
+            return custom(xd, yd, idx)
+        # call with just the x-data if above failed
+        except TypeError:
+            return custom(xd)
 
     # use ticker formatter if scalar or fixed formatter
     if (
-        not isinstance(xformatter, (ticker.ScalarFormatter, ticker.FixedFormatter))
+        not isinstance(tick_xformatter, (ticker.ScalarFormatter, ticker.FixedFormatter))
     ):
-        return xformatter(xd)
+        return tick_xformatter(xd)
     
     # otherwise default to basic format
     if not len(ret):

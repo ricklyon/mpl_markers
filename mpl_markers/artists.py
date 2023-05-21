@@ -210,10 +210,6 @@ class LineLabel(MarkerArtist):
 
             # initalize text box as the label
             self.ylabel = MarkerLabel(axes=axes, transform=None, verticalalignment="bottom", **ylabel)
-
-            # set text formatter
-            if ylabel_formatter is None:
-                self.ylabel_formatter = utils.yformatter
         
         if xydot:
             # initalize marker dot at data point
@@ -271,7 +267,7 @@ class LineLabel(MarkerArtist):
         if self.ylabel:
             # set the x position to the data point location plus a small pad (in display coordinates)
             xd_lbl = self._alias_xdata[idx] if np.any(self._alias_xdata) else self._xd 
-            txt = self.ylabel_formatter(xd_lbl, self._yd, idx=self._idx, axes=self.axes)
+            txt = utils.yformatter(xd_lbl, self._yd, self._idx, self.axes, self.ylabel_formatter)
 
             self.ylabel.set_position((xl, yl), txt, anchor='center left', disp=True, offset=(label_xpad, 0))
             # get the text label from the formatter
@@ -339,18 +335,12 @@ class AxisLabel(MarkerArtist):
 
         if xlabel:
             self.xlabel = MarkerLabel(axes=axes, transform=None, verticalalignment="bottom", **xlabel)
-            # set text formatter
-            if xlabel_formatter is None:
-                self.xlabel_formatter = utils.xformatter
 
         if yline:
             self.yline = MarkerLine(axes=axes, **yline)
 
         if ylabel:
             self.ylabel = MarkerLabel(axes=axes, transform=None, verticalalignment="bottom", **ylabel)
-            # set text formatter
-            if ylabel_formatter is None:
-                self.ylabel_formatter = utils.yformatter
 
         if xymark and xline and yline:
             # initalize marker dot at data point
@@ -391,9 +381,10 @@ class AxisLabel(MarkerArtist):
                 if self.ref_marker:
                     lbl_xd = self._xd - self.ref_marker._xd
                     lbl_sgn = '$\Delta$ +' if lbl_xd > 0 else '$\Delta$ -'
-                    lbl = lbl_sgn + self.xlabel_formatter(np.abs(lbl_xd), self._yd, axes=self.axes)
+                    txt = utils.xformatter(np.abs(lbl_xd), self._yd, None, self.axes, self.xlabel_formatter)
+                    lbl = lbl_sgn + txt
                 else:
-                    lbl = self.xlabel_formatter(self._xd, self._yd, axes=self.axes)
+                    lbl = utils.xformatter(self._xd, self._yd, None, self.axes, self.xlabel_formatter)
 
                 xl, _ = utils.data2display(self.axes, (x, 0))
                 self.xlabel.set_position((xl, 0), lbl, anchor='lower center', disp=True)
@@ -414,9 +405,10 @@ class AxisLabel(MarkerArtist):
                 if self.ref_marker:
                     lbl_yd = self._yd - self.ref_marker._yd
                     lbl_sgn = '$\Delta$ +' if lbl_yd > 0 else '$\Delta -$'
-                    lbl = lbl_sgn + self.ylabel_formatter(self._xd, np.abs(lbl_yd), axes=self.axes)
+                    txt = utils.yformatter(self._xd, np.abs(lbl_yd), None, self.axes, self.ylabel_formatter)
+                    lbl = lbl_sgn + txt
                 else:
-                    lbl = self.ylabel_formatter(self._xd, self._yd, axes=self.axes)
+                    lbl = utils.yformatter(self._xd, self._yd, None, self.axes, self.ylabel_formatter)
 
                 self.ylabel.set_position((0, yl), lbl, anchor='center left', disp=True)
 
