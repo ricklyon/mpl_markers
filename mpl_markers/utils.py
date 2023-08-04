@@ -31,7 +31,7 @@ def yformatter(xd: float, yd: float, idx: int, axes: Axes, custom: Callable= Non
     if (
         not isinstance(tick_yformatter, (ticker.ScalarFormatter, ticker.FixedFormatter))
     ):
-        ret = tick_yformatter(yd)
+        return tick_yformatter(yd)
 
     # otherwise default to basic format
     if not len(ret):
