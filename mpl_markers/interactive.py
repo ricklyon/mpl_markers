@@ -17,7 +17,6 @@ def onkey_press(event):
             toolbar.pan()
         elif toolbar.mode == "zoom rect":
             toolbar.zoom()
-
     if axes is None:
         return
     if axes.marker_active is None:
@@ -29,6 +28,12 @@ def onkey_press(event):
         markers.draw_active(axes)
     elif event.key == "right":
         markers.shift_active(axes, 1, call_handler=True)
+        markers.draw_active(axes)
+    elif event.key == "shift+left":
+        markers.shift_active(axes, -10, call_handler=True)
+        markers.draw_active(axes)
+    elif event.key == "shift+right":
+        markers.shift_active(axes, 10, call_handler=True)
         markers.draw_active(axes)
     elif event.key == "delete":
         markers.remove(axes)

@@ -29,6 +29,8 @@ ax.plot(x1, np.sin(x1)*np.cos(x1)**2)
 
 mplm.data_marker(x=0)
 ```
+The marker can be dragged to any location along the data line, or moved incrementally with the left/right arrow keys.
+
 ![example1](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example1.gif)
 
 Add an axis marker that moves freely on the canvas:

@@ -361,17 +361,29 @@ def shift_active(axes: Axes, direction: int, call_handler: bool=False):
     ----------
     axes: mpl.Axes
         matplotlib axes object
-    xd: float (Optional)
-        x-axis value in data coordinates to move the x-marker to.
+    direction: int
+        incrementally shift active marker along the x-axis left (direction=-1) 
+        or right (direction=1)
     """
-    # do nothing if this axes does not have a marker
-    if axes.marker_active is None:
+
+    # do nothing if active marker is not a data marker or has no data labels
+    m = axes.marker_active
+    if m is None or not isinstance(m, artists.DataMarker):
+        return
+    if len(m.data_labels) < 1:
+        return 
+    
+    # use the data index of the first line
+    line_label = m.data_labels[0]
+    if line_label.idx is None:
         return
 
-    xd, yd = axes.marker_active.get_data_points()
+    # increment the index of the label, this will only update a single label, but
+    # will be overidden by the next call
+    line_label.set_position_by_index(line_label.idx + direction)
 
-    # move the marker and redraw it
-    axes.marker_active.set_position(x=x, y=y)
+    # set the position of all the labels based on the current position of the first label
+    m.set_position(line_label.xd, line_label.yd)
     draw_active(axes)
 
     # call the axes handler if it exists

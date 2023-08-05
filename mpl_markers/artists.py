@@ -202,6 +202,10 @@ class LineLabel(MarkerArtist):
         self.ylabel_formatter = ylabel_formatter
         self._alias_xdata = alias_xdata
         self.data_line = data_line
+
+        self._idx = None
+        self._xd = None
+        self._yd = None
         
         if ylabel:
             # change the edge color of the text box to the line color
@@ -233,15 +237,30 @@ class LineLabel(MarkerArtist):
 
         super().__init__(axes, artists)
         # set to arbitrary position to intialize member variables.
-        self._set_position_by_index(idx=0)
+        self.set_position_by_index(idx=0)
 
-    def _set_position_by_index(self, idx):
+    @property
+    def idx(self):
+        return self._idx
+    
+    @property
+    def xd(self):
+        return self._xd
+    
+    @property
+    def yd(self):
+        return self._yd
+    
+    def set_position_by_index(self, idx):
     
         self._xdata = np.array(self.data_line.get_xdata())
         self._ydata = np.array(self.data_line.get_ydata())
 
-        if idx < 0 or idx >= len(self._xdata):
-            raise ValueError(f'marker index placement of {idx} out of bounds for data with length {len(self._xdata)}.')
+        if idx >= len(self._xdata):
+            idx = len(self._xdata) - 1
+        
+        if idx < 0:
+            idx = 0
         
         self._idx = idx
         self._xd = np.real(self._xdata[idx])
@@ -301,7 +320,7 @@ class LineLabel(MarkerArtist):
             raise ValueError(f'Insufficent positional arguments for marker with placement mode: {mode}')
         
         # set position to the data point with the smallest error
-        self._set_position_by_index(np.nanargmin(dist))
+        self.set_position_by_index(np.nanargmin(dist))
 
 
 
