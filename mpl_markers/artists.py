@@ -13,11 +13,14 @@ class AbstractArtist(object):
     def __init__(self, axes=None): 
 
         self.axes = axes
+
         self.set_visible(False)
         self._hidden = False
 
     def draw_artist(self, renderer=None):
         """Draw each artist associated with marker."""
+
+        canvas = self.axes.figure.canvas
 
         if self._hidden:
             return 
@@ -26,10 +29,14 @@ class AbstractArtist(object):
             # super calls the next method in the MRO, which should be Text or Line2D
             super().draw(renderer)
 
-        else:
+        elif canvas.supports_blit:
             self.set_visible(True)
             self.axes.draw_artist(self)
             self.set_visible(False)
+        
+        # pdf and svg don't support draw_artist
+        else:
+            self.set_visible(True)
 
     def contains(self, event):
         if self._hidden:

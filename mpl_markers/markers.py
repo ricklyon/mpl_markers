@@ -445,11 +445,11 @@ def draw_all(axes: Axes, blit: bool = True):
     # all we have to do here is draw the markers on the canvas.
     if not axes.figure.canvas.supports_blit:
         # draw all markers, including the active marker
-        [line.axes.draw_artist(line) for line in axes._marker_lines]
+        # [line.axes.draw_artist(line) for line in axes._marker_lines]
         [m.draw() for m in axes.markers]
-        # redraw legend so it's on top of the markers and return
-        legends = [ax_s.get_legend() for ax_s in axes._secondary_axes + [axes]]
-        [leg.axes.draw_artist(leg) for leg in legends if leg]
+        # # redraw legend so it's on top of the markers and return
+        # legends = [ax_s.get_legend() for ax_s in axes._secondary_axes + [axes]]
+        # [leg.axes.draw_artist(leg) for leg in legends if leg]
         return 
 
     # raise error if marker_init_canvas has not been called yet
