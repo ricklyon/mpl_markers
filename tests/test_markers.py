@@ -191,6 +191,22 @@ class TestStringMethods(unittest.TestCase):
 
         plt.show()
 
+    def test_axis_limits(self):
+        fig, ax = plt.subplots(1,1)
+        x1 = np.linspace(np.pi, 2*np.pi, 1000)
+
+        ax.plot(x1, np.cos(x1), label='cdos(x)')
+        ax.plot(x1, np.sin(x1), label='sin(x)')
+        ax.legend(loc='lower left')
+
+        plt.margins(x=0)
+
+        m1 = mplm.data_marker(x=-2*np.pi)
+
+        self.assertEqual(ax.get_xlim(), (np.pi, 2*np.pi))
+
+        plt.show()
+
     def test_svg_pdf(sef):
         fig, (ax1, ax2) = plt.subplots(2,1)
         x1 = np.linspace(-2*np.pi, 2*np.pi, 1000)
