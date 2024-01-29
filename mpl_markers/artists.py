@@ -166,6 +166,8 @@ class MarkerArtist(object):
         """Draw each artist associated with marker."""
         [obj.draw_artist() for obj in self._artists if obj]
             
+    def set_visible(self, state):
+        [obj.set_visible(state) for obj in self._artists if obj]
 
     def set_hidden(self, state):
         [obj.set_hidden(state) for obj in self._artists if obj]
