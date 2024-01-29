@@ -440,21 +440,17 @@ def draw_all(axes: Axes, blit: bool = True):
     """
     axes = axes._marker_axes
     [m.update_positions() for m in axes.markers]
-    
+
     # some backends (like pdf or svg) do not support blitting since they are not interactive backends.
     # all we have to do here is draw the markers on the canvas.
     if not axes.figure.canvas.supports_blit:
         # draw all markers, including the active marker
-        # [line.axes.draw_artist(line) for line in axes._marker_lines]
         [m.draw() for m in axes.markers]
-        # # redraw legend so it's on top of the markers and return
-        # legends = [ax_s.get_legend() for ax_s in axes._secondary_axes + [axes]]
-        # [leg.axes.draw_artist(leg) for leg in legends if leg]
         return 
 
     # raise error if marker_init_canvas has not been called yet
     if axes._all_background is None:
-        raise RuntimeError('Canvas not initialized for markers.')
+        init_canvas(axes.figure)
 
     # restore the canvas background with no markers or marker lines drawn on it
     axes.figure.canvas.restore_region(axes._all_background)
@@ -499,15 +495,17 @@ def init_canvas(fig: Figure):
     Configures the figure canvas to support blitting so markers can be updated quickly. This updates the canvas background
     image and should be called whenever the figure canvas is resized or modified.
     """
+
     # draw canvas and return if markers have not been initialized
     if not hasattr(fig, '_marker_axes'):
-        fig.canvas.draw()
+        # fig.canvas.draw()
         return
 
     if fig.canvas.supports_blit:
         # markers visibility is set to False by default so markers will not be drawn on the canvas here
         for axes in fig._marker_axes:
             [line.set_visible(False) for line in axes._marker_lines]
+
         interactive.canvas_draw(fig)
 
         # at this point, we have an updated canvas with no marker artists. Save the bbox for all axes
@@ -527,7 +525,7 @@ def init_canvas(fig: Figure):
     for ax in fig._marker_axes:
         # positions are updated since the canvas was possibly resized or changed
         # in some way since they were placed
-        [m.update_positions() for m in ax.markers]
+        # [m.update_positions() for m in ax.markers]
         [line.set_visible(True) for line in ax._marker_lines]
             
         # don't use blitting here 

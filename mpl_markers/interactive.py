@@ -95,10 +95,23 @@ def onrelease(event):
 def on_draw(event):
     markers.init_canvas(event.canvas.figure)
 
-def canvas_draw(figure):
+    if not event.canvas.supports_blit:
+        # for pdf and svg, we have to use the renderer passed into the event, or else the updates
+        # won't apply to the correct figure.
+        canvas_draw(event.canvas.figure, event.renderer)
+        # make the markers invisible again after the draw
+        for axes in event.canvas.figure.axes:
+            if hasattr(axes, "markers"):
+                [m.set_visible(False) for m in axes.markers]
+
+def canvas_draw(figure, renderer=None):
     
     figure.canvas.mpl_disconnect(figure._marker_handlers['draw_event'])
-    figure.canvas.draw()
+    if renderer is not None:
+        figure.draw(renderer)
+    else:
+        figure.canvas.draw()
+        
     figure._marker_handlers['draw_event'] = figure.canvas.mpl_connect("draw_event", on_draw)
 
 def init_events(figure):
