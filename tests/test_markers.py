@@ -2,6 +2,7 @@ import unittest
 import mpl_markers as mplm
 import numpy as np
 import matplotlib.pyplot as plt
+from pathlib import Path
 
 class TestStringMethods(unittest.TestCase):
 
@@ -188,6 +189,22 @@ class TestStringMethods(unittest.TestCase):
         ax.legend(loc='lower left')
         m1 = mplm.axis_marker(y=0)
 
+        plt.show()
+
+    def test_svg_pdf(sef):
+        fig, (ax1, ax2) = plt.subplots(2,1)
+        x1 = np.linspace(-2*np.pi, 2*np.pi, 1000)
+
+        ax1.plot(x1, np.cos(x1), label='cos(x)')
+        ax2.plot(x1, np.sin(x1), label='cos(x)')
+        ax1.legend(loc='lower left')
+
+        m1 = mplm.data_marker(x=-1.5*np.pi, axes=ax1)
+        m2 = mplm.axis_marker(y=0.5, axes=ax1)
+
+        dir_ = Path(__file__).parent
+        fig.savefig(dir_ / "mpl_test.pdf")
+        fig.savefig(dir_ / "mpl_test.svg")
         plt.show()
 
 if __name__ == '__main__':
