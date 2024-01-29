@@ -2,11 +2,11 @@ from . import markers
 from . import utils
 
 
-
 def onkey_release(event):
 
     if event.key == "shift":
         event.canvas.figure._marker_hold = True
+
 
 def onkey_press(event):
     axes = utils.get_event_axes(event)
@@ -41,6 +41,7 @@ def onkey_press(event):
     elif event.key == "f5":
         on_draw()
 
+
 def onmotion(event):
     x = event.xdata
     y = event.ydata
@@ -49,9 +50,10 @@ def onmotion(event):
     if axes is None or axes.marker_active is None:
         return
 
-    if getattr(axes, '_marker_move', False):
+    if getattr(axes, "_marker_move", False):
         markers.move_active(x, y, call_handler=True, axes=axes)
         markers.draw_active(axes)
+
 
 def onclick(event):
     axes = utils.get_event_axes(event)
@@ -65,6 +67,7 @@ def onclick(event):
     if m is not None and axes.marker_active != m:
         markers.set_active(axes, m)
         markers.draw_all(axes)
+
 
 def onrelease(event):
     x = event.xdata
@@ -90,7 +93,7 @@ def onrelease(event):
         markers.draw_active(axes)
     else:
         return
-    
+
 
 def on_draw(event):
     markers.init_canvas(event.canvas.figure)
@@ -104,25 +107,29 @@ def on_draw(event):
             if hasattr(axes, "markers"):
                 [m.set_visible(False) for m in axes.markers]
 
+
 def canvas_draw(figure, renderer=None):
-    
-    figure.canvas.mpl_disconnect(figure._marker_handlers['draw_event'])
+
+    figure.canvas.mpl_disconnect(figure._marker_handlers["draw_event"])
     if renderer is not None:
         figure.draw(renderer)
     else:
         figure.canvas.draw()
-        
-    figure._marker_handlers['draw_event'] = figure.canvas.mpl_connect("draw_event", on_draw)
+
+    figure._marker_handlers["draw_event"] = figure.canvas.mpl_connect(
+        "draw_event", on_draw
+    )
+
 
 def init_events(figure):
 
     event_handlers = dict(
-        button_press_event = onclick, 
-        key_press_event = onkey_press,
-        key_release_event= onkey_release,
-        motion_notify_event = onmotion,
-        button_release_event = onrelease,
-        draw_event = on_draw
+        button_press_event=onclick,
+        key_press_event=onkey_press,
+        key_release_event=onkey_release,
+        motion_notify_event=onmotion,
+        button_release_event=onrelease,
+        draw_event=on_draw,
     )
 
     figure._marker_handlers = {}
@@ -130,10 +137,3 @@ def init_events(figure):
 
     for k, v in event_handlers.items():
         figure._marker_handlers[k] = figure.canvas.mpl_connect(k, v)
-
-
-
-
-
-
-    

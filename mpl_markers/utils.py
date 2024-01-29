@@ -3,16 +3,22 @@ from matplotlib import ticker
 from typing import Tuple, Union, Callable
 import numpy as np
 
+
 def data2display(axes, point):
     return axes.transData.transform(point)
+
 
 def axes2display(axes, point):
     return axes.transAxes.transform(point)
 
+
 def display2data(axes, point):
     return axes.transData.inverted().transform(point)
 
-def yformatter(xd: float, yd: float, idx: int, axes: Axes, custom: Callable= None) -> str:
+
+def yformatter(
+    xd: float, yd: float, idx: int, axes: Axes, custom: Callable = None
+) -> str:
     """
     Returns a formatted string for the y-label marker at the data points xd, yd.
     """
@@ -28,9 +34,7 @@ def yformatter(xd: float, yd: float, idx: int, axes: Axes, custom: Callable= Non
             return custom(yd)
 
     # use ticker formatter if scalar or fixed formatter
-    if (
-        not isinstance(tick_yformatter, (ticker.ScalarFormatter, ticker.FixedFormatter))
-    ):
+    if not isinstance(tick_yformatter, (ticker.ScalarFormatter, ticker.FixedFormatter)):
         return tick_yformatter(yd)
 
     # otherwise default to basic format
@@ -38,7 +42,9 @@ def yformatter(xd: float, yd: float, idx: int, axes: Axes, custom: Callable= Non
         return "{:.3f}".format(yd)
 
 
-def xformatter(xd: float, yd: float, idx: int, axes: Axes, custom: Callable= None) -> str:
+def xformatter(
+    xd: float, yd: float, idx: int, axes: Axes, custom: Callable = None
+) -> str:
     """
     Returns a formatted string for the x-label marker at the data point xd.
     """
@@ -54,16 +60,15 @@ def xformatter(xd: float, yd: float, idx: int, axes: Axes, custom: Callable= Non
             return custom(xd)
 
     # use ticker formatter if scalar or fixed formatter
-    if (
-        not isinstance(tick_xformatter, (ticker.ScalarFormatter, ticker.FixedFormatter))
-    ):
+    if not isinstance(tick_xformatter, (ticker.ScalarFormatter, ticker.FixedFormatter)):
         return tick_xformatter(xd)
-    
+
     # otherwise default to basic format
     if not len(ret):
         return "{:.3f}".format(xd)
 
-def get_artist_bbox(artist, padding:Tuple[float, float]=None):
+
+def get_artist_bbox(artist, padding: Tuple[float, float] = None):
     """
     Returns the bounding box for the artist in display coordinates, optionally with padding applied
 
@@ -89,6 +94,7 @@ def get_artist_bbox(artist, padding:Tuple[float, float]=None):
 
     return bbox
 
+
 def get_event_marker(axes, event):
     for m in axes.markers:
         contains = m.contains(event)
@@ -96,13 +102,14 @@ def get_event_marker(axes, event):
             return m
     return None
 
+
 def get_event_axes(event):
 
     axes = event.inaxes
-    
+
     if axes is None:
         return None
-        
+
     tmode = axes.figure.canvas.toolbar.mode
     if tmode != "":
         return None
@@ -110,12 +117,12 @@ def get_event_axes(event):
     try:
         if event.button != 1:
             return None
-    except (Exception):
+    except Exception:
         pass
 
     axes = event.inaxes
 
-    if hasattr(axes, '_marker_axes'):
+    if hasattr(axes, "_marker_axes"):
         return axes._marker_axes
     else:
         return None

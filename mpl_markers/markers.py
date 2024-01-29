@@ -22,26 +22,26 @@ __all__ = (
     "draw_active",
     "move_active",
     "draw_all",
-    "init_axes"
+    "init_axes",
 )
 
 
 def data_marker(
-    x: float = None, 
-    y: float = None, 
-    xidx: int = None, 
-    xline: Union[dict, bool] = True, 
-    yline: Union[dict, bool] = False, 
-    xydot: Union[dict, bool] = True, 
-    xlabel: Union[dict, bool] = False, 
-    ylabel: Union[dict, bool] = True, 
+    x: float = None,
+    y: float = None,
+    xidx: int = None,
+    xline: Union[dict, bool] = True,
+    yline: Union[dict, bool] = False,
+    xydot: Union[dict, bool] = True,
+    xlabel: Union[dict, bool] = False,
+    ylabel: Union[dict, bool] = True,
     yformatter: Callable = None,
     xformatter: Callable = None,
-    axes: Axes = None, 
-    lines: List[Line2D] = None, 
-    alias_xdata: np.ndarray= None, 
-    call_handler: bool =False,
-) :
+    axes: Axes = None,
+    lines: List[Line2D] = None,
+    alias_xdata: np.ndarray = None,
+    call_handler: bool = False,
+):
     """
     Adds new marker at an x-axis data value, or at the index of the x-axis array. Sets the
     newly created marker as the active marker of the axes.
@@ -98,7 +98,10 @@ def data_marker(
 
     # pull properties from default styles
     properties = {}
-    for (k, prop) in zip(['xline', 'yline', 'xlabel', 'ylabel', 'xydot'], [xline, yline, xlabel, ylabel, xydot]):
+    for k, prop in zip(
+        ["xline", "yline", "xlabel", "ylabel", "xydot"],
+        [xline, yline, xlabel, ylabel, xydot],
+    ):
         if prop is True:
             properties[k] = axes._marker_style[k]
         elif isinstance(prop, dict):
@@ -111,7 +114,14 @@ def data_marker(
     if yformatter is None and axes._marker_yformatter:
         yformatter = axes._marker_yformatter
 
-    m = artists.DataMarker(axes, lines, xlabel_formatter=xformatter, ylabel_formatter=yformatter, alias_xdata=alias_xdata, **properties)
+    m = artists.DataMarker(
+        axes,
+        lines,
+        xlabel_formatter=xformatter,
+        ylabel_formatter=yformatter,
+        alias_xdata=alias_xdata,
+        **properties,
+    )
 
     if xidx is not None:
         m._set_position_by_index(xidx)
@@ -129,19 +139,20 @@ def data_marker(
 
     return m
 
+
 def axis_marker(
-    x: float = None, 
-    y: float = None, 
-    xline: Union[dict, bool] = None, 
-    yline: Union[dict, bool] = None, 
-    xlabel: Union[dict, bool] = None, 
-    ylabel: Union[dict, bool] = None, 
-    xymark: Union[dict, bool] = None, 
+    x: float = None,
+    y: float = None,
+    xline: Union[dict, bool] = None,
+    yline: Union[dict, bool] = None,
+    xlabel: Union[dict, bool] = None,
+    ylabel: Union[dict, bool] = None,
+    xymark: Union[dict, bool] = None,
     yformatter: Callable = None,
     xformatter: Callable = None,
-    axes: Axes = None, 
-    ref_marker: artists.AxisLabel = None
-) :
+    axes: Axes = None,
+    ref_marker: artists.AxisLabel = None,
+):
     """
     Adds new marker at an x-axis data value, or at the index of the x-axis array. Sets the
     newly created marker as the active marker of the axes.
@@ -197,7 +208,10 @@ def axis_marker(
 
     # pull properties from default styles
     properties = {}
-    for (k, prop) in zip(['xline', 'yline', 'xlabel', 'ylabel', 'xymark'], [xline, yline, xlabel, ylabel, xymark]):
+    for k, prop in zip(
+        ["xline", "yline", "xlabel", "ylabel", "xymark"],
+        [xline, yline, xlabel, ylabel, xymark],
+    ):
         if prop is True or prop is None:
             properties[k] = axes._marker_style[k]
         elif isinstance(prop, dict):
@@ -205,13 +219,18 @@ def axis_marker(
             for n, v in prop.items():
                 properties[k][n] = v
 
-
     if xformatter is None and axes._marker_xformatter:
         xformatter = axes._marker_xformatter
     if yformatter is None and axes._marker_yformatter:
         yformatter = axes._marker_yformatter
 
-    m = artists.AxisLabel(axes, xlabel_formatter=xformatter, ylabel_formatter=yformatter, ref_marker=ref_marker, **properties)
+    m = artists.AxisLabel(
+        axes,
+        xlabel_formatter=xformatter,
+        ylabel_formatter=yformatter,
+        ref_marker=ref_marker,
+        **properties,
+    )
     m.set_position(x, y)
 
     # create new marker and append to the axes marker list
@@ -219,6 +238,7 @@ def axis_marker(
     axes.marker_active = m
 
     return m
+
 
 def clear(axes: Axes = None):
     """
@@ -246,12 +266,13 @@ def clear(axes: Axes = None):
     axes.markers = []
     axes.marker_active = None
 
-def remove(axes:Axes = None, marker: artists.MarkerArtist = None):
+
+def remove(axes: Axes = None, marker: artists.MarkerArtist = None):
     """
     Removes a marker from the axes. If no marker is provided, removes the active marker.
     """
     if marker is None:
-        marker = getattr(axes, 'marker_active', None)
+        marker = getattr(axes, "marker_active", None)
 
     # remove the artists associated with this marker
     marker.remove()
@@ -261,15 +282,17 @@ def remove(axes:Axes = None, marker: artists.MarkerArtist = None):
     # set the active marker to the last marker in the list.
     axes.marker_active = axes.markers[-1] if len(axes.markers) else None
 
-def set_active(axes:Axes, marker:artists.MarkerArtist):
 
-    if not hasattr(axes, '_marker_axes'):
+def set_active(axes: Axes, marker: artists.MarkerArtist):
+
+    if not hasattr(axes, "_marker_axes"):
         return
 
     if marker not in axes.markers:
-        raise ValueError('Marker does not belong to axes.')
+        raise ValueError("Marker does not belong to axes.")
 
     axes.marker_active = marker
+
 
 def disable_lines(lines: Union[List[Line2D], Line2D], axes: Axes = None):
     """
@@ -294,7 +317,7 @@ def disable_lines(lines: Union[List[Line2D], Line2D], axes: Axes = None):
     if axes is None:
         axes = plt.gca()
 
-    if hasattr(axes, 'marker_axes'):
+    if hasattr(axes, "marker_axes"):
         axes = axes.marker_axes
 
     if not hasattr(axes, "_marker_ignorelines"):
@@ -303,7 +326,11 @@ def disable_lines(lines: Union[List[Line2D], Line2D], axes: Axes = None):
     axes._marker_ignorelines += lines
 
 
-def add_handler(axes: Axes, handler: Callable[[float, float, Optional[dict]], None], kwargs: dict = None):
+def add_handler(
+    axes: Axes,
+    handler: Callable[[float, float, Optional[dict]], None],
+    kwargs: dict = None,
+):
     """
     Sets a callback function that is called whenever the active marker is moved on the given axes.
 
@@ -326,7 +353,10 @@ def add_handler(axes: Axes, handler: Callable[[float, float, Optional[dict]], No
     # save the function and the parameters as a tuple
     axes._marker_handler = handler, kwargs
 
-def move_active(x: float, y: float = None, call_handler: bool=False, axes: Axes = None):
+
+def move_active(
+    x: float, y: float = None, call_handler: bool = False, axes: Axes = None
+):
     """
     Moves the active marker to a point along the x-axis.
 
@@ -353,7 +383,8 @@ def move_active(x: float, y: float = None, call_handler: bool=False, axes: Axes 
         func, params = axes._marker_handler
         func(*axes.marker_active.get_data_points(), **params)
 
-def shift_active(axes: Axes, direction: int, call_handler: bool=False):
+
+def shift_active(axes: Axes, direction: int, call_handler: bool = False):
     """
     Moves the active marker to a point along the x-axis.
 
@@ -362,7 +393,7 @@ def shift_active(axes: Axes, direction: int, call_handler: bool=False):
     axes: mpl.Axes
         matplotlib axes object
     direction: int
-        incrementally shift active marker along the x-axis left (direction=-1) 
+        incrementally shift active marker along the x-axis left (direction=-1)
         or right (direction=1)
     """
 
@@ -371,8 +402,8 @@ def shift_active(axes: Axes, direction: int, call_handler: bool=False):
     if m is None or not isinstance(m, artists.DataMarker):
         return
     if len(m.data_labels) < 1:
-        return 
-    
+        return
+
     # use the data index of the first line
     line_label = m.data_labels[0]
     if line_label.idx is None:
@@ -390,6 +421,7 @@ def shift_active(axes: Axes, direction: int, call_handler: bool=False):
     if axes._marker_handler is not None and call_handler:
         func, params = axes._marker_handler
         func(*axes.marker_active.get_data_points(), **params)
+
 
 def draw_active(axes: Axes):
     """
@@ -424,6 +456,7 @@ def draw_active(axes: Axes):
     # apply canvas changes
     axes.figure.canvas.blit(axes.bbox)
 
+
 def draw_all(axes: Axes, blit: bool = True):
     """
     Updates all markers on the axes canvas, and updates axes active_background image used for blitting. If this
@@ -446,7 +479,7 @@ def draw_all(axes: Axes, blit: bool = True):
     if not axes.figure.canvas.supports_blit:
         # draw all markers, including the active marker
         [m.draw() for m in axes.markers]
-        return 
+        return
 
     # raise error if marker_init_canvas has not been called yet
     if axes._all_background is None:
@@ -459,10 +492,9 @@ def draw_all(axes: Axes, blit: bool = True):
     [line.axes.draw_artist(line) for line in axes._marker_lines]
     [m.draw() for m in axes.markers if m != axes.marker_active]
 
-
     if blit:
         # the active_background has everything draw on it except the active marker.
-        # update the canvas first by blitting the other marker artists on it, then save the 
+        # update the canvas first by blitting the other marker artists on it, then save the
         # active background
         axes.figure.canvas.blit(axes.bbox)
         axes._active_background = axes.figure.canvas.copy_from_bbox(axes.bbox)
@@ -490,6 +522,7 @@ def draw_all(axes: Axes, blit: bool = True):
         # invalidate the active background
         axes._active_background = None
 
+
 def init_canvas(fig: Figure):
     """
     Configures the figure canvas to support blitting so markers can be updated quickly. This updates the canvas background
@@ -497,7 +530,7 @@ def init_canvas(fig: Figure):
     """
 
     # draw canvas and return if markers have not been initialized
-    if not hasattr(fig, '_marker_axes'):
+    if not hasattr(fig, "_marker_axes"):
         # fig.canvas.draw()
         return
 
@@ -519,28 +552,35 @@ def init_canvas(fig: Figure):
             # get legends for this axes and any twinx/twiny axes.
             for ax_s in ax._secondary_axes + [ax]:
                 if ax_s.get_legend() is not None:
-                    ax._legend_background.append(fig.canvas.copy_from_bbox(ax_s.get_legend().get_frame().get_bbox()))
-    
-    # draw all markers 
+                    ax._legend_background.append(
+                        fig.canvas.copy_from_bbox(
+                            ax_s.get_legend().get_frame().get_bbox()
+                        )
+                    )
+
+    # draw all markers
     for ax in fig._marker_axes:
         # positions are updated since the canvas was possibly resized or changed
         # in some way since they were placed
         # [m.update_positions() for m in ax.markers]
         [line.set_visible(True) for line in ax._marker_lines]
-            
-        # don't use blitting here 
+
+        # don't use blitting here
         draw_all(ax, blit=False)
 
 
-
-def init_axes(axes: Axes, style_path: Path = None, xformatter: Callable=None, yformatter: Callable=None, 
-    xline: dict = None, 
-    yline: dict = None, 
-    xydot: dict= None, 
-    xlabel: dict = None, 
+def init_axes(
+    axes: Axes,
+    style_path: Path = None,
+    xformatter: Callable = None,
+    yformatter: Callable = None,
+    xline: dict = None,
+    yline: dict = None,
+    xydot: dict = None,
+    xlabel: dict = None,
     ylabel: dict = None,
-    handler: Callable = None
-    ):
+    handler: Callable = None,
+):
     """
     Compiles a list of axes lines that will accept marker y-labels and validates the x-axis data of each.
 
@@ -576,17 +616,24 @@ def init_axes(axes: Axes, style_path: Path = None, xformatter: Callable=None, yf
     axes._secondary_axes = []
 
     # read default style
-    if not hasattr(axes, '_marker_style'):
-        style_path = Path(__file__).parent / 'style/default.json' if style_path is None else style_path
+    if not hasattr(axes, "_marker_style"):
+        style_path = (
+            Path(__file__).parent / "style/default.json"
+            if style_path is None
+            else style_path
+        )
         with open(style_path) as f:
             axes._marker_style = json.load(f)
 
-    for (k, prop) in zip(['xline', 'yline', 'xlabel', 'ylabel', 'xydot'], [xline, yline, xlabel, ylabel, xydot]):
+    for k, prop in zip(
+        ["xline", "yline", "xlabel", "ylabel", "xydot"],
+        [xline, yline, xlabel, ylabel, xydot],
+    ):
         if prop:
             for n, v in prop.items():
                 axes._marker_style[k][n] = v
 
-    if not hasattr(axes, '_marker_ignorelines'):
+    if not hasattr(axes, "_marker_ignorelines"):
         axes._marker_ignorelines = []
 
     axes._marker_yformatter = yformatter
@@ -595,15 +642,15 @@ def init_axes(axes: Axes, style_path: Path = None, xformatter: Callable=None, yf
     # check if there are other axes that share the same canvas (twinx or twiny axes)
     for ax_p in axes.figure.axes:
         if (ax_p is not axes) and (ax_p.bbox.bounds == axes.bbox.bounds):
-            
-            if hasattr(ax_p, 'markers'):
+
+            if hasattr(ax_p, "markers"):
                 # found a shared axes that has already been initialized-- defer all marker events to this axes.
                 axes._marker_axes = ax_p
                 # hide the axes patch
                 # axes.patch.set_visible(False)
                 # axes.set_zorder(0)
                 # keep track of ignored lines at the primary axes level
-                if hasattr(ax_p, '_marker_ignorelines'):
+                if hasattr(ax_p, "_marker_ignorelines"):
                     axes._marker_ignorelines += ax_p._marker_ignorelines
                 # skip initialization for secondary axes
                 continue
@@ -612,10 +659,10 @@ def init_axes(axes: Axes, style_path: Path = None, xformatter: Callable=None, yf
                 axes._secondary_axes.append(ax_p)
                 ax_p._marker_axes = axes
 
-        if not hasattr(axes, 'markers'):
+        if not hasattr(axes, "markers"):
             axes.markers = []
             axes.set_zorder(1)
-            
+
             axes.marker_active = None
             axes._active_background = None
             axes._all_background = None
@@ -624,15 +671,21 @@ def init_axes(axes: Axes, style_path: Path = None, xformatter: Callable=None, yf
 
     # do not modify the axes if called on a secondary axes, initialize primary axes instead
     axes = axes._marker_axes
-    # compile list of all lines in this axes and any axes that share the same canvas 
-    lines_unfiltered = list(axes.lines) + list(itertools.chain.from_iterable([ax.lines for ax in axes._secondary_axes]))
+    # compile list of all lines in this axes and any axes that share the same canvas
+    lines_unfiltered = list(axes.lines) + list(
+        itertools.chain.from_iterable([ax.lines for ax in axes._secondary_axes])
+    )
     # filter out lines with 2 or fewer data points (straight lines, or single markers)
-    axes._marker_lines = [ln for ln in lines_unfiltered if ln not in axes._marker_ignorelines and len(ln.get_xdata()) > 2]
+    axes._marker_lines = [
+        ln
+        for ln in lines_unfiltered
+        if ln not in axes._marker_ignorelines and len(ln.get_xdata()) > 2
+    ]
 
     # add handle to top-level axes to figure
-    if not hasattr(axes.figure, '_marker_axes'):
+    if not hasattr(axes.figure, "_marker_axes"):
         axes.figure._marker_axes = [axes]
-    elif axes not in axes.figure._marker_axes: 
+    elif axes not in axes.figure._marker_axes:
         axes.figure._marker_axes.append(axes)
 
     # create marker handler if in kwargs
