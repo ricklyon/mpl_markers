@@ -10,6 +10,7 @@ class TestStringMethods(unittest.TestCase):
     # @unittest.skip
     def test_nan_values(self):
         fig, ax = plt.subplots(1, 1)
+        ax.set_title("test_nan_values")
         x1 = np.linspace(-2 * np.pi, 2 * np.pi, 1000)
 
         d1 = np.sin(x1)
@@ -29,6 +30,7 @@ class TestStringMethods(unittest.TestCase):
     # @unittest.skip
     def test_unequal_xdata(self):
         fig, ax = plt.subplots(1, 1)
+        ax.set_title("test_unequal_xdata")
         x1 = np.linspace(-2 * np.pi, 2 * np.pi, 1000)
         x2 = np.linspace(-3 * np.pi, 3 * np.pi, 400)
 
@@ -44,6 +46,7 @@ class TestStringMethods(unittest.TestCase):
     # @unittest.skip
     def test_non_monotonic(self):
         fig, (ax1) = plt.subplots(1, 1)
+        ax1.set_title("test_non_monotonic")
         x1 = np.linspace(0, 2 * np.pi, 1000)
         x2 = np.linspace(0, np.pi / 2, 2000)
 
@@ -67,6 +70,7 @@ class TestStringMethods(unittest.TestCase):
     # @unittest.skip
     def test_alias(self):
         fig, (ax1) = plt.subplots(1, 1)
+        ax1.set_title("test_alias")
         x1_pi = np.linspace(0, 2, 1000)
         x1 = x1_pi * np.pi
         # x2 = np.linspace(0, np.pi/2, 1000)
@@ -77,7 +81,8 @@ class TestStringMethods(unittest.TestCase):
         ax1.plot(np.real(d), np.imag(d))
 
         # set marker to angle. The xdata for the marker is the real component of d, so to set the angle we need to specify the index
-        angle = 3 / 4
+        angle1 = 3 / 4
+        angle2 = -1 / 4
 
         def yfmt(x, y, idx):
             return "{:.3f}$\pi$".format(y)
@@ -85,8 +90,12 @@ class TestStringMethods(unittest.TestCase):
         def xfmt(x, y, idx):
             return "{:.3f}$\pi$".format(x)
 
-        m = mplm.data_marker(
-            x=angle, yline=True, alias_xdata=x1_pi, yformatter=yfmt, xformatter=xfmt
+        mplm.data_marker(
+            x=angle1, yline=True, alias_xdata=x1_pi, yformatter=yfmt, xformatter=xfmt
+        )
+
+        mplm.data_marker(
+            x=angle2, yline=True, alias_xdata=x1_pi, yformatter="{:.3f}$\pi$", xformatter="{:.3f}$\pi$"
         )
 
         plt.show()
@@ -94,6 +103,7 @@ class TestStringMethods(unittest.TestCase):
     # @unittest.skip
     def test_marker_properties(self):
         fig, ax = plt.subplots(1, 1)
+        ax.set_title("test_marker_properties")
         x2 = np.linspace(-3 * np.pi, 3 * np.pi, 400)
 
         ax.plot(x2, np.cos(x2), label="cos(x)")
@@ -110,6 +120,7 @@ class TestStringMethods(unittest.TestCase):
     # @unittest.skip
     def test_twinx_axes(self):
         fig, (ax1, ax2) = plt.subplots(2, 1)
+        ax1.set_title("test_twinx_axes")
         ax1.grid(linewidth=0.5, linestyle="-")
 
         par1 = ax1.twinx()
@@ -142,6 +153,7 @@ class TestStringMethods(unittest.TestCase):
     # @unittest.skip
     def test_polar(self):
         fig, (ax1) = plt.subplots(1, 1, subplot_kw={"projection": "polar"})
+        ax1.set_title("test_polar")
         x2 = np.linspace(-np.pi, np.pi, 1000)
 
         ax1.plot(x2, np.cos(x2) ** 2)
@@ -166,6 +178,7 @@ class TestStringMethods(unittest.TestCase):
     # @unittest.skip
     def test_axis_markers(sef):
         fig, ax = plt.subplots(1, 1)
+        ax.set_title("test_axis_markers")
         x1 = np.linspace(-2 * np.pi, 2 * np.pi, 1000)
 
         d1 = np.sin(x1)
@@ -183,6 +196,7 @@ class TestStringMethods(unittest.TestCase):
 
     def test_axis_markers2(sef):
         fig, ax = plt.subplots(1, 1)
+        ax.set_title("test_axis_markers2")
         x1 = np.linspace(-2 * np.pi, 2 * np.pi, 1000)
 
         d1 = np.sin(x1)
@@ -191,12 +205,13 @@ class TestStringMethods(unittest.TestCase):
         ax.plot(x1, d1, label="sin(x)")
         ax.plot(x1, np.cos(x1), label="cos(x)")
         ax.legend(loc="lower left")
-        m1 = mplm.axis_marker(y=0)
+        m1 = mplm.axis_marker(y=0, yformatter="{:.1f}")
 
         plt.show()
 
     def test_axis_limits(self):
         fig, ax = plt.subplots(1, 1)
+        ax.set_title("test_axis_limits")
         x1 = np.linspace(np.pi, 2 * np.pi, 1000)
 
         ax.plot(x1, np.cos(x1), label="cdos(x)")
@@ -213,6 +228,7 @@ class TestStringMethods(unittest.TestCase):
 
     def test_svg_pdf(sef):
         fig, (ax1, ax2) = plt.subplots(2, 1)
+        ax1.set_title("test_svg_pdf")
         x1 = np.linspace(-2 * np.pi, 2 * np.pi, 1000)
 
         ax1.plot(x1, np.cos(x1), label="cos(x)")

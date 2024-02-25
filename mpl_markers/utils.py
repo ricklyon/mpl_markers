@@ -25,7 +25,7 @@ def yformatter(
     tick_yformatter = axes.yaxis.get_major_formatter()
     ret = ""
 
-    if custom:
+    if isinstance(custom, Callable):
         # try calling with the x, y data points first
         try:
             return custom(xd, yd, idx)
@@ -33,12 +33,16 @@ def yformatter(
         except TypeError:
             return custom(yd)
 
+    # formatting string
+    elif isinstance(custom, str):
+        return custom.format(yd)
+    
     # use ticker formatter if scalar or fixed formatter
-    if not isinstance(tick_yformatter, (ticker.ScalarFormatter, ticker.FixedFormatter)):
+    elif not isinstance(tick_yformatter, (ticker.ScalarFormatter, ticker.FixedFormatter)):
         return tick_yformatter(yd)
 
     # otherwise default to basic format
-    if not len(ret):
+    else:
         return "{:.3f}".format(yd)
 
 
@@ -51,20 +55,24 @@ def xformatter(
     tick_xformatter = axes.xaxis.get_major_formatter()
     ret = ""
 
-    if custom:
+    if isinstance(custom, Callable):
         # try calling with the x, y data points first
         try:
             return custom(xd, yd, idx)
         # call with just the x-data if above failed
         except TypeError:
             return custom(xd)
+    
+    # formatting string
+    elif isinstance(custom, str):
+        return custom.format(xd)
 
     # use ticker formatter if scalar or fixed formatter
-    if not isinstance(tick_xformatter, (ticker.ScalarFormatter, ticker.FixedFormatter)):
+    elif not isinstance(tick_xformatter, (ticker.ScalarFormatter, ticker.FixedFormatter)):
         return tick_xformatter(xd)
 
     # otherwise default to basic format
-    if not len(ret):
+    else:
         return "{:.3f}".format(xd)
 
 
