@@ -616,14 +616,11 @@ def init_axes(
     axes._secondary_axes = []
 
     # read default style
-    if not hasattr(axes, "_marker_style"):
-        style_path = (
-            Path(__file__).parent / "style/default.json"
-            if style_path is None
-            else style_path
-        )
-        with open(style_path) as f:
-            axes._marker_style = json.load(f)
+    style_path = (
+        Path(__file__).parent / "style/default.json" if style_path is None else style_path
+    )
+    with open(style_path) as f:
+        axes._marker_style = json.load(f)
 
     for k, prop in zip(
         ["xline", "yline", "xlabel", "ylabel", "xydot"],

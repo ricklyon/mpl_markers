@@ -19,7 +19,9 @@ class TestStringMethods(unittest.TestCase):
         ax.plot(x1, d1, label="sin(x)")
         ax.plot(x1, np.cos(x1), label="cos(x)")
         ax.legend(loc="lower left")
+
         m = mplm.data_marker(x=-1)
+        mplm.data_marker(x=1, xline=False)
 
         self.assertLess(np.max(m._xd + 1), 1e-3)
 
