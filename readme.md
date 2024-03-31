@@ -50,7 +50,8 @@ mplm.axis_marker(x=0, y=-0.2, xformatter="{:.2f}$\pi$", yformatter="{:.2f}$\pi$"
 ```
 
 ### Meshgrid Markers
-Markers can also be added to `pcolormesh` plots,
+Data markers can also be added to `pcolormesh` plots, the marker label shows the value of the color-mapped z data.
+
 ```python
 # create example meshgrid data
 xy = np.linspace(-1, 1, 100)

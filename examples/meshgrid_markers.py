@@ -8,10 +8,10 @@ dir_ = Path(__file__).parent
 # create example meshgrid data
 xy = np.linspace(-1, 1, 100)
 x, y = np.meshgrid(xy, xy)
-z = np.sin(2*x)**2 + np.cos(3*y)**2
+z = np.sin(2 * x) ** 2 + np.cos(3 * y) ** 2
 
 # plot the data with pcolormesh
-fig = plt.figure(figsize=(6,4), constrained_layout=True, dpi=300)
+fig = plt.figure(figsize=(6, 4), constrained_layout=True, dpi=300)
 ax = fig.subplots(1, 1)
 m = ax.pcolormesh(x, y, z, vmin=0, vmax=2)
 plt.colorbar(m)
