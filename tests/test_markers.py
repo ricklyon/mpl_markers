@@ -97,7 +97,11 @@ class TestStringMethods(unittest.TestCase):
         )
 
         mplm.data_marker(
-            x=angle2, yline=True, alias_xdata=x1_pi, yformatter="{:.3f}$\pi$", xformatter="{:.3f}$\pi$"
+            x=angle2,
+            yline=True,
+            alias_xdata=x1_pi,
+            yformatter="{:.3f}$\pi$",
+            xformatter="{:.3f}$\pi$",
         )
 
         plt.show()

@@ -14,6 +14,7 @@ pip install mpl-markers
 import mpl_markers as mplm
 ```
 
+### Line Markers
 Add a marker attached to plotted data lines:
 ```python
 import numpy as np
@@ -33,6 +34,7 @@ The marker can be dragged to any location along the data line, or moved incremen
 
 ![example1](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example1.gif)
 
+### Axis Markers
 Add an axis marker that moves freely on the canvas:
 ```python
 ax.xaxis.set_major_formatter(lambda x, pos: '{:.2f}$\pi$'.format(x/np.pi))
@@ -46,6 +48,24 @@ format the label, use the following,
 ```python
 mplm.axis_marker(x=0, y=-0.2, xformatter="{:.2f}$\pi$", yformatter="{:.2f}$\pi$")
 ```
+
+### Meshgrid Markers
+Markers can also be added to `pcolormesh` plots,
+```python
+# create example meshgrid data
+xy = np.linspace(-1, 1, 100)
+x, y = np.meshgrid(xy, xy)
+z = np.sin(2*x)**2 + np.cos(3*y)**2
+
+fig, ax = plt.subplots(1, 1)
+m = ax.pcolormesh(x, y, z, vmin=0, vmax=2)
+plt.colorbar(m)
+
+# add a data marker at a single x/y point on the plot. x/y is in data coordinates.
+mplm.data_marker(x=0.75, y=0.25)
+```
+![example3](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example3.png)
+
 ## Styling
 The marker style is controlled by the `mpl_markers/style/default.json` file:
 

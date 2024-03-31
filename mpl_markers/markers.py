@@ -6,6 +6,7 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib import ticker
 from matplotlib.lines import Line2D
+from matplotlib.collections import QuadMesh
 import itertools
 import json
 from pathlib import Path
@@ -93,8 +94,6 @@ def data_marker(
 
     # use lines kwarg if provided, otherwise use all marker lines attached to the axes
     lines = axes._marker_lines if lines is None else lines
-    if not len(lines):
-        return None
 
     # pull properties from default styles
     properties = {}
@@ -109,24 +108,47 @@ def data_marker(
             for n, v in prop.items():
                 properties[k][n] = v
 
+    # get the x and y label formatters from the axes if not provided
     if xformatter is None and axes._marker_xformatter:
         xformatter = axes._marker_xformatter
     if yformatter is None and axes._marker_yformatter:
         yformatter = axes._marker_yformatter
 
-    m = artists.DataMarker(
-        axes,
-        lines,
-        xlabel_formatter=xformatter,
-        ylabel_formatter=yformatter,
-        alias_xdata=alias_xdata,
-        **properties,
-    )
+    # create a marker on a meshgrid plot
+    if len(axes.collections) and isinstance(axes.collections[0], QuadMesh):
+        # force the x and y line to be attached to the marker, but allow customization
+        properties = dict(**properties)
+        for prop in ["xline", "yline"]:
+            if prop not in properties.keys() or not properties[prop]:
+                properties[prop] = axes._marker_style[prop]
 
-    if xidx is not None:
-        m._set_position_by_index(xidx)
-    else:
+        m = artists.MeshMarker(
+            axes,
+            axes.collections[0],
+            xlabel_formatter=xformatter,
+            ylabel_formatter=yformatter,
+            **properties,
+        )
         m.set_position(x, y)
+
+    # create marker on the existing data lines
+    elif len(lines):
+        m = artists.DataMarker(
+            axes,
+            lines,
+            xlabel_formatter=xformatter,
+            ylabel_formatter=yformatter,
+            alias_xdata=alias_xdata,
+            **properties,
+        )
+        if xidx is not None:
+            m._set_position_by_index(xidx)
+        else:
+            m.set_position(x, y)
+
+    # if no suitable data found on the axes to attach a marker to, do nothing and return
+    else:
+        return None
 
     # create new marker and append to the axes marker list
     axes.markers.append(m)
@@ -617,7 +639,9 @@ def init_axes(
 
     # read default style
     style_path = (
-        Path(__file__).parent / "style/default.json" if style_path is None else style_path
+        Path(__file__).parent / "style/default.json"
+        if style_path is None
+        else style_path
     )
     with open(style_path) as f:
         axes._marker_style = json.load(f)
