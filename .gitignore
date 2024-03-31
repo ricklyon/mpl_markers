@@ -1,1 +1,7 @@
 *.pypirc
+/mpl_markers.egg-info
+/.venv
+/debug
+/dist
+/venv.lnk
+__pycache__/

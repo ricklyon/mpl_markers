@@ -36,9 +36,11 @@ def yformatter(
     # formatting string
     elif isinstance(custom, str):
         return custom.format(yd)
-    
+
     # use ticker formatter if scalar or fixed formatter
-    elif not isinstance(tick_yformatter, (ticker.ScalarFormatter, ticker.FixedFormatter)):
+    elif not isinstance(
+        tick_yformatter, (ticker.ScalarFormatter, ticker.FixedFormatter)
+    ):
         return tick_yformatter(yd)
 
     # otherwise default to basic format
@@ -62,13 +64,15 @@ def xformatter(
         # call with just the x-data if above failed
         except TypeError:
             return custom(xd)
-    
+
     # formatting string
     elif isinstance(custom, str):
         return custom.format(xd)
 
     # use ticker formatter if scalar or fixed formatter
-    elif not isinstance(tick_xformatter, (ticker.ScalarFormatter, ticker.FixedFormatter)):
+    elif not isinstance(
+        tick_xformatter, (ticker.ScalarFormatter, ticker.FixedFormatter)
+    ):
         return tick_xformatter(xd)
 
     # otherwise default to basic format
