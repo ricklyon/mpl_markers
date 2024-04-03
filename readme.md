@@ -64,7 +64,7 @@ plt.colorbar(m)
 # add a data marker at a single x/y point on the plot. x/y is in data coordinates.
 mplm.data_marker(x=0.75, y=0.25)
 ```
-![example3](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example3.png)
+![example3](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example3.gif)
 
 ## Styling
 The marker style is controlled by the `mpl_markers/style/default.json` file:

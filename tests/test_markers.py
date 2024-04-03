@@ -232,7 +232,7 @@ class TestStringMethods(unittest.TestCase):
 
         plt.show()
 
-    def test_svg_pdf(sef):
+    def test_svg_pdf(self):
         fig, (ax1, ax2) = plt.subplots(2, 1)
         ax1.set_title("test_svg_pdf")
         x1 = np.linspace(-2 * np.pi, 2 * np.pi, 1000)
@@ -247,6 +247,22 @@ class TestStringMethods(unittest.TestCase):
         dir_ = Path(__file__).parent
         fig.savefig(dir_ / "mpl_test.pdf")
         fig.savefig(dir_ / "mpl_test.svg")
+        plt.show()
+
+    def test_mesh(self):
+        # create example meshgrid data
+        xy = np.linspace(-1, 1, 200)
+        x, y = np.meshgrid(xy, xy)
+        z = np.sin(2 * x) ** 2 + np.cos(5 * y) ** 2
+
+        # plot the data with pcolormesh
+        fig = plt.figure()
+        ax = fig.subplots(1, 1)
+        m = ax.pcolormesh(x, y, z, vmin=0, vmax=2)
+        # fig.colorbar()
+
+        # add a data marker at a single x/y point on the plot. x/y is in data coordinates.
+        mplm.data_marker(x=0.75, y=0.25)
         plt.show()
 
 

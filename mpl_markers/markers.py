@@ -114,8 +114,9 @@ def data_marker(
     if yformatter is None and axes._marker_yformatter:
         yformatter = axes._marker_yformatter
 
+    collection = axes.collections[0] if len(axes.collections) else None
     # create a marker on a meshgrid plot
-    if len(axes.collections) and isinstance(axes.collections[0], QuadMesh):
+    if isinstance(collection, QuadMesh):
         # force the x and y line to be attached to the marker, but allow customization
         properties = dict(**properties)
         for prop in ["xline", "yline"]:
@@ -124,7 +125,7 @@ def data_marker(
 
         m = artists.MeshMarker(
             axes,
-            axes.collections[0],
+            collection,
             xlabel_formatter=xformatter,
             ylabel_formatter=yformatter,
             **properties,

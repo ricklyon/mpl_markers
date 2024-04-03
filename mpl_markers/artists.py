@@ -557,20 +557,28 @@ class MeshLabel(MarkerArtist):
                 axes=axes, transform=None, verticalalignment="bottom", **ylabel
             )
 
-        if xydot:
-            # initalize marker dot at data point
-            self.xydot = MarkerLine(
-                axes=axes,
-                **xydot,
-                markeredgewidth=1.5,
-                markeredgecolor="k",
-                markerfacecolor="w",
-            )
+        # initalize marker dot at data point
+        self.xydot = MarkerLine(
+            axes=axes,
+            **xydot,
+            markeredgewidth=1,
+            markeredgecolor="k",
+            markerfacecolor="w",
+        )
+        self.xydot_outer = MarkerLine(
+            axes=axes,
+            # **xydot,
+            markeredgewidth=1,
+            markeredgecolor="k",
+            markerfacecolor="w",
+            markersize=20,
+            marker=".",
+        )
 
         if yline:
             self.yline = MarkerLine(axes=axes, **yline)
 
-        artists = [self.yline, self.xydot, self.ylabel]
+        artists = [self.yline, self.xydot_outer, self.xydot, self.ylabel]
 
         super().__init__(axes, artists)
         # set to arbitrary position to intialize member variables.
@@ -617,7 +625,7 @@ class MeshLabel(MarkerArtist):
         self._zd = self._data[xidx, yidx]
 
         # pad values in display coordinates (pixels)
-        label_xpad = 10 * self.axes.figure.dpi / 100
+        label_xpad = 15 * self.axes.figure.dpi / 100
 
         # hide marker if data is not finite or NaN
         if not np.isfinite(self._zd):
@@ -645,8 +653,9 @@ class MeshLabel(MarkerArtist):
 
         if self.xydot:
             self.xydot.set_data([self._xd], [self._yd])
+            self.xydot_outer.set_data([self._xd], [self._yd])
             # set the color of the dot
-            z_norm = self.quadmesh.colorbar.norm(self._zd)
+            z_norm = self.quadmesh.norm(self._zd)
             plt.setp(self.xydot, markerfacecolor=self.quadmesh.cmap(z_norm))
             self.xydot.set_color(self.quadmesh.cmap(z_norm))
 
