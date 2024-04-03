@@ -8,7 +8,7 @@ dir_ = Path(__file__).parent
 # create example meshgrid data
 xy = np.linspace(-1, 1, 200)
 x, y = np.meshgrid(xy, xy)
-z = np.sin(2 * x) ** 2 + np.cos(*y) ** 2
+z = np.sin(2 * x) ** 2 + np.cos(5 * y) ** 2
 
 # plot the data with pcolormesh
 fig = plt.figure(dpi=200)
