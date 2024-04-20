@@ -20,8 +20,8 @@ class TestStringMethods(unittest.TestCase):
         ax.plot(x1, np.cos(x1), label="cos(x)")
         ax.legend(loc="lower left")
 
-        m = mplm.data_marker(x=-1)
-        mplm.data_marker(x=1, xline=False)
+        m = mplm.line_marker(x=-1)
+        mplm.line_marker(x=1, xline=False)
 
         self.assertLess(np.max(m._xd + 1), 1e-3)
 
@@ -40,7 +40,7 @@ class TestStringMethods(unittest.TestCase):
         ax.plot(x2, np.cos(x2), label="cos(x)")
 
         angle = 2.5 * np.pi
-        m = mplm.data_marker(x=angle)
+        m = mplm.line_marker(x=angle)
         m_x, m_y = m.get_data_points()
 
         plt.show()
@@ -61,7 +61,7 @@ class TestStringMethods(unittest.TestCase):
         # set marker to angle. The xdata for the marker is the real component of d, so to set the angle we need to specify the index
         angle = np.pi / 2
         m_idx = np.argmin(np.abs(x1 - angle))
-        m = mplm.data_marker(
+        m = mplm.line_marker(
             x=0
         )  # , ylabel_formatter=lambda x, y, idx, **kwargs: '{:.2f}$\pi$'.format(x1[idx]/np.pi))
 
@@ -92,11 +92,11 @@ class TestStringMethods(unittest.TestCase):
         def xfmt(x, y, idx):
             return "{:.3f}$\pi$".format(x)
 
-        mplm.data_marker(
+        mplm.line_marker(
             x=angle1, yline=True, alias_xdata=x1_pi, yformatter=yfmt, xformatter=xfmt
         )
 
-        mplm.data_marker(
+        mplm.line_marker(
             x=angle2,
             yline=True,
             alias_xdata=x1_pi,
@@ -114,7 +114,7 @@ class TestStringMethods(unittest.TestCase):
 
         ax.plot(x2, np.cos(x2), label="cos(x)")
 
-        m = mplm.data_marker(
+        m = mplm.line_marker(
             x=0,
             xlabel=True,
             ylabel=dict(fontfamily="monospace", rotation=-10, color="teal", fontsize=8),
@@ -149,8 +149,8 @@ class TestStringMethods(unittest.TestCase):
         mplm.init_axes(ax1, xlabel=dict(fontsize=6, color="black"), handler=link_ax1)
         mplm.init_axes(ax2, xlabel=dict(fontsize=6, color="black"), handler=link_ax2)
 
-        m1 = mplm.data_marker(x=1, axes=ax1, xlabel=True)
-        m2 = mplm.data_marker(x=0, axes=ax2, xlabel=True)
+        m1 = mplm.line_marker(x=1, axes=ax1, xlabel=True)
+        m2 = mplm.line_marker(x=0, axes=ax2, xlabel=True)
 
         # move ax1 marker and make sure they stay synced
         mplm.move_active(x=2, call_handler=True, axes=ax1)
@@ -165,7 +165,7 @@ class TestStringMethods(unittest.TestCase):
         ax1.plot(x2, np.cos(x2) ** 2)
         ax1.plot(x2, np.cos(x2))
 
-        m = mplm.data_marker(x=np.pi / 3)
+        m = mplm.line_marker(x=np.pi / 3)
 
         m_x, m_y = m.get_data_points()
         plt.show()
@@ -178,7 +178,7 @@ class TestStringMethods(unittest.TestCase):
 
         axes.plot(theta_rad, np.abs(np.sin(theta_rad)))
 
-        m = mplm.data_marker(x=-np.pi / 2)
+        m = mplm.line_marker(x=-np.pi / 2)
         plt.show()
 
     # @unittest.skip
@@ -226,7 +226,7 @@ class TestStringMethods(unittest.TestCase):
 
         plt.margins(x=0)
 
-        m1 = mplm.data_marker(x=-2 * np.pi)
+        m1 = mplm.line_marker(x=-2 * np.pi)
 
         self.assertEqual(ax.get_xlim(), (np.pi, 2 * np.pi))
 
@@ -241,7 +241,7 @@ class TestStringMethods(unittest.TestCase):
         ax2.plot(x1, np.sin(x1), label="cos(x)")
         ax1.legend(loc="lower left")
 
-        m1 = mplm.data_marker(x=-1.5 * np.pi, axes=ax1)
+        m1 = mplm.line_marker(x=-1.5 * np.pi, axes=ax1)
         m2 = mplm.axis_marker(y=0.5, axes=ax1)
 
         dir_ = Path(__file__).parent
@@ -262,7 +262,7 @@ class TestStringMethods(unittest.TestCase):
         # fig.colorbar()
 
         # add a data marker at a single x/y point on the plot. x/y is in data coordinates.
-        mplm.data_marker(x=0.75, y=0.25)
+        mplm.mesh_marker(x=0.75, y=0.25)
         plt.show()
 
 

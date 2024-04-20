@@ -519,10 +519,8 @@ class MeshLabel(MarkerArtist):
         self,
         axes: Axes,
         quadmesh: QuadMesh,
-        xydot: dict = None,
-        ylabel: dict = None,
-        yline: dict = None,
-        ylabel_formatter: Callable = None,
+        zlabel: dict = None,
+        zlabel_formatter: Callable = None,
     ):
         """
         Parameters:
@@ -536,38 +534,37 @@ class MeshLabel(MarkerArtist):
             passed into the Line2D constructor. False for no marker dot.
         """
 
-        self.ylabel = None
+        self.zlabel = None
         self.xydot = None
-        self.yline = None
-        self.ylabel_formatter = ylabel_formatter
-        self.xlabel_formatter = ylabel_formatter
+        self.zlabel_formatter = zlabel_formatter
         self.quadmesh = quadmesh
+        self.coords = (
+            quadmesh.get_coordinates().data[:-1, :-1]
+            + quadmesh.get_coordinates().data[1:, 1:]
+        ) / 2
 
         self._yidx = None
         self._xidx = None
         self._xd = None
         self._yd = None
-        self._coords = quadmesh._coordinates.data
-        self._xdata = self._coords[0, :-1, 0] + np.diff(self._coords[0, :, 0]) / 2
-        self._ydata = self._coords[:-1, 0, 1] + np.diff(self._coords[:, 0, 1]) / 2
 
-        if ylabel:
+        if zlabel:
             # initalize text box as the label
-            self.ylabel = MarkerLabel(
-                axes=axes, transform=None, verticalalignment="bottom", **ylabel
+            self.zlabel = MarkerLabel(
+                axes=axes, transform=None, verticalalignment="bottom", **zlabel
             )
 
         # initalize marker dot at data point
         self.xydot = MarkerLine(
             axes=axes,
-            **xydot,
             markeredgewidth=1,
             markeredgecolor="k",
             markerfacecolor="w",
+            markersize=10,
+            marker=".",
         )
         self.xydot_outer = MarkerLine(
             axes=axes,
-            # **xydot,
             markeredgewidth=1,
             markeredgecolor="k",
             markerfacecolor="w",
@@ -575,10 +572,7 @@ class MeshLabel(MarkerArtist):
             marker=".",
         )
 
-        if yline:
-            self.yline = MarkerLine(axes=axes, **yline)
-
-        artists = [self.yline, self.xydot_outer, self.xydot, self.ylabel]
+        artists = [self.xydot_outer, self.xydot, self.zlabel]
 
         super().__init__(axes, artists)
         # set to arbitrary position to intialize member variables.
@@ -593,18 +587,9 @@ class MeshLabel(MarkerArtist):
         return self._yd
 
     def set_position_by_index(self, xidx, yidx):
-
-        self._coords = self.quadmesh._coordinates.data
-
-        # coordinates store the edges of each cell, get the midpoint
-        self._xdata = self._coords[0, :-1, 0] + np.diff(self._coords[0, :, 0]) / 2
-        self._ydata = self._coords[:-1, 0, 1] + np.diff(self._coords[:, 0, 1]) / 2
-
-        self._data = self.quadmesh.get_array().data.T
-
         # coordinates is a NxMx2 array where NxM is the shape of the meshgrid.
         # the last dimension holds the xy data coordinates of each meshgrid cell.
-        xlen, ylen = len(self._xdata), len(self._ydata)
+        xlen, ylen = self.quadmesh.get_array().shape
 
         if xidx >= xlen:
             xidx = xlen - 1
@@ -620,9 +605,10 @@ class MeshLabel(MarkerArtist):
 
         self._xidx, self._yidx = xidx, yidx
         # index the x and y coordinates
-        self._xd, self._yd = self._xdata[xidx], self._ydata[yidx]
+        self._xd, self._yd = self.coords[xidx, yidx]
+
         # get the data value at the xy coordinates
-        self._zd = self._data[xidx, yidx]
+        self._zd = self.quadmesh.get_array()[xidx, yidx]
 
         # pad values in display coordinates (pixels)
         label_xpad = 15 * self.axes.figure.dpi / 100
@@ -638,18 +624,15 @@ class MeshLabel(MarkerArtist):
         # the line may belong to another twinx/y axes and have different scaling.
         xl, yl = utils.data2display(self.axes, (self._xd, self._yd))
 
-        if self.ylabel:
+        if self.zlabel:
             # set the x position to the data point location plus a small pad (in display coordinates)
             txt = utils.yformatter(
-                self._xd, self._zd, self._xidx, self.axes, self.ylabel_formatter
+                self._xd, self._zd, self._xidx, self.axes, self.zlabel_formatter
             )
 
-            self.ylabel.set_position(
+            self.zlabel.set_position(
                 (xl, yl), txt, anchor="center left", disp=True, offset=(label_xpad, 0)
             )
-
-        if self.yline:
-            self.yline.set_data(self.axes.get_xlim(), [self._yd] * 2)
 
         if self.xydot:
             self.xydot.set_data([self._xd], [self._yd])
@@ -666,10 +649,11 @@ class MeshLabel(MarkerArtist):
         if disp:
             x, y = utils.display2data(self.axes, (x, y))
 
-        self._data = self.quadmesh.get_array().data.T
+        dist = np.argmin(
+            np.sum(np.abs(self.coords - np.array([x, y])[None, None]), axis=-1)
+        )
 
-        self._xidx = np.nanargmin(np.abs(x - self._xdata))
-        self._yidx = np.nanargmin(np.abs(y - self._ydata))
+        self._xidx, self._yidx = np.unravel_index(dist, self.coords.shape[:2])
 
         # set position to the data point with the smallest error
         self.set_position_by_index(self._xidx, self._yidx)
@@ -704,7 +688,6 @@ class DataMarker(MarkerArtist):
         self.xaxis_label = None
         self.lines = lines
         self.ylabel_artists = []
-        self.xlabel_artist = None
         self.axes = axes
         self._alias_xdata = alias_xdata
 
@@ -756,8 +739,6 @@ class DataMarker(MarkerArtist):
         # get list of all labels in the marker
         if ylabel:
             self.ylabel_artists += [lbl.ylabel for lbl in self.data_labels]
-        if self.xaxis_label:
-            self.xlabel_artist = self.xaxis_label.xlabel
 
         self._has_xlabel = self.xaxis_label and self.xaxis_label.xlabel
 
@@ -927,12 +908,12 @@ class MeshMarker(MarkerArtist):
         quadmesh: QuadMesh,
         xlabel: dict = None,
         ylabel: dict = None,
-        xydot: dict = None,
+        zlabel: dict = None,
         xline: dict = None,
         yline: dict = None,
         xlabel_formatter: Callable = None,
         ylabel_formatter: Callable = None,
-        alias_xdata: np.ndarray = None,
+        zlabel_formatter: Callable = None,
     ):
         """
         Parameters:
@@ -942,50 +923,33 @@ class MeshMarker(MarkerArtist):
         """
         self.data_label = None
         artists = []
-        self.xaxis_label = None
+        self.axis_label = None
         self.quadmesh = quadmesh
-        self.ylabel_artists = []
-        self.xlabel_artist = None
+        self.data_label = None
         self.axes = axes
-        self._alias_xdata = alias_xdata
 
-        # check that ylines have associated labels or dots
-        if yline and not (ylabel or xydot):
-            raise TypeError("y-axis lines require labels or marker dots.")
-
-        # create single x-axes label shared by all the data markers
-        if xline or xlabel:
-            self.xaxis_label = AxisLabel(
-                axes, xlabel, False, xline, False, False, xlabel_formatter, None
+        # create single x/y-axes label
+        if xline or xlabel or yline or ylabel:
+            self.axis_label = AxisLabel(
+                axes,
+                xlabel,
+                ylabel,
+                xline,
+                yline,
+                False,
+                xlabel_formatter,
+                ylabel_formatter,
             )
 
-        # data labels for each line
-        if ylabel or xydot or yline:
-            # turn off ylabel on data markers if yline is present. The axes label will be used as the data label.
-            self.data_label = MeshLabel(
-                axes, quadmesh, xydot, ylabel, yline, ylabel_formatter
-            )
+        # label for the z data
+        self.data_label = MeshLabel(axes, quadmesh, zlabel, zlabel_formatter)
 
         # build list of all artists in the marker
-
         # line and dot artists first
-        if self.xaxis_label:
-            artists += self.xaxis_label._artists[:2]
-        artists += self.data_label._artists[:-1]
+        if self.axis_label:
+            artists += self.axis_label._artists
 
-        # then label artists on top
-        artists += self.data_label._artists[-1:]
-
-        if self.xaxis_label:
-            artists += self.xaxis_label._artists[2:]
-
-        # get list of all labels in the marker
-        if ylabel:
-            self.ylabel_artists += [self.data_label.ylabel]
-        if self.xaxis_label:
-            self.xlabel_artist = self.xaxis_label.xlabel
-
-        self._has_xlabel = self.xaxis_label and self.xaxis_label.xlabel
+        artists += self.data_label._artists
 
         self.set_position(0, 0)
 
@@ -995,26 +959,19 @@ class MeshMarker(MarkerArtist):
         """
         Parameters:
         -----------
-        mode: str -- ['x', 'y', 'xy']
-            controls if line markers are placed by the x value ('x'), the y value ('y'), or by both ('xy').
+
         """
 
         # save the arguments to update the marker position when the axes bbox changes later
         self._position_args = (x, y, disp)
 
         # set the positions for each of the data label
-        self._xlbl = None
         self.data_label.set_position(x, y, disp)
-        self._xdata, self._ydata = self.data_label._xdata, self.data_label._ydata
         self._xd, self._yd = self.data_label._xd, self.data_label._yd
 
-        if self.xaxis_label:
-
+        if self.axis_label:
             # find the label with the closest x data point to the target position and place the x-axis marker there'
-            nearest_lbl_idx = np.nanargmin(np.abs(self._xdata - x))
-            self._xlbl = self._xdata[nearest_lbl_idx]
-
-            self.xaxis_label.set_position(self._xlbl)
+            self.axis_label.set_position(self.data_label._xd, self.data_label._yd)
 
     def get_data_points(self):
         return self._xd, self._yd

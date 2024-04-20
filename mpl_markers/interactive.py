@@ -83,7 +83,7 @@ def onrelease(event):
     active_marker = axes.marker_active
 
     if m is None and (active_marker is None or axes.figure._marker_hold):
-        markers.data_marker(x, y, axes=axes)
+        markers.line_marker(x, y, axes=axes)
         markers.draw_all(axes)
     elif m is not None:
         markers.set_active(axes, m)

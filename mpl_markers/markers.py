@@ -14,7 +14,8 @@ from pathlib import Path
 from . import artists, interactive
 
 __all__ = (
-    "data_marker",
+    "line_marker",
+    "mesh_marker",
     "axis_marker",
     "clear",
     "remove",
@@ -27,7 +28,7 @@ __all__ = (
 )
 
 
-def data_marker(
+def line_marker(
     x: float = None,
     y: float = None,
     xidx: int = None,
@@ -36,8 +37,8 @@ def data_marker(
     xydot: Union[dict, bool] = True,
     xlabel: Union[dict, bool] = False,
     ylabel: Union[dict, bool] = True,
-    yformatter: Callable = None,
     xformatter: Callable = None,
+    yformatter: Callable = None,
     axes: Axes = None,
     lines: List[Line2D] = None,
     alias_xdata: np.ndarray = None,
@@ -74,12 +75,12 @@ def data_marker(
     ylabel: bool OR dictionary = True
         shows a text box of the y value of the marker at the data point location. If dictionary, parameters are passed
         into axes.text()
-    yformatter: Callable = None
-        function that returns a string to be placed in the data label given a x and y data coordinate
-            def yformatter(x: float, y:float, idx:int) -> str
     xformatter: Callable = None
         function that returns a string to be placed in the x-axis label given a x data coordinate
             def xformatter(x: float, idx:int) -> str
+    yformatter: Callable = None
+        function that returns a string to be placed in the data label given a x and y data coordinate
+            def yformatter(x: float, y:float, idx:int) -> str
 
     Returns:
     --------
@@ -94,6 +95,9 @@ def data_marker(
 
     # use lines kwarg if provided, otherwise use all marker lines attached to the axes
     lines = axes._marker_lines if lines is None else lines
+
+    if not len(lines):
+        return None
 
     # pull properties from default styles
     properties = {}
@@ -114,42 +118,131 @@ def data_marker(
     if yformatter is None and axes._marker_yformatter:
         yformatter = axes._marker_yformatter
 
-    collection = axes.collections[0] if len(axes.collections) else None
-    # create a marker on a meshgrid plot
-    if isinstance(collection, QuadMesh):
-        # force the x and y line to be attached to the marker, but allow customization
-        properties = dict(**properties)
-        for prop in ["xline", "yline"]:
-            if prop not in properties.keys() or not properties[prop]:
-                properties[prop] = axes._marker_style[prop]
-
-        m = artists.MeshMarker(
-            axes,
-            collection,
-            xlabel_formatter=xformatter,
-            ylabel_formatter=yformatter,
-            **properties,
-        )
+    # create marker on the existing data lines
+    m = artists.DataMarker(
+        axes,
+        lines,
+        xlabel_formatter=xformatter,
+        ylabel_formatter=yformatter,
+        alias_xdata=alias_xdata,
+        **properties,
+    )
+    if xidx is not None:
+        m._set_position_by_index(xidx)
+    else:
         m.set_position(x, y)
 
-    # create marker on the existing data lines
-    elif len(lines):
-        m = artists.DataMarker(
-            axes,
-            lines,
-            xlabel_formatter=xformatter,
-            ylabel_formatter=yformatter,
-            alias_xdata=alias_xdata,
-            **properties,
-        )
-        if xidx is not None:
-            m._set_position_by_index(xidx)
-        else:
-            m.set_position(x, y)
+    # create new marker and append to the axes marker list
+    axes.markers.append(m)
+    axes.marker_active = m
 
-    # if no suitable data found on the axes to attach a marker to, do nothing and return
-    else:
+    # call the axes handler if it exists
+    if axes._marker_handler is not None and call_handler:
+        func, params = axes._marker_handler
+        func(*axes.marker_active.get_data_points(), **params)
+
+    return m
+
+
+def mesh_marker(
+    x: float = None,
+    y: float = None,
+    xline: Union[dict, bool] = True,
+    yline: Union[dict, bool] = True,
+    xlabel: Union[dict, bool] = False,
+    ylabel: Union[dict, bool] = False,
+    zlabel: Union[dict, bool] = True,
+    xformatter: Callable = None,
+    yformatter: Callable = None,
+    zformatter: Callable = None,
+    axes: Axes = None,
+    call_handler: bool = False,
+):
+    """
+    Adds new marker on a pcolormesh plot.
+
+    Parameters
+    ----------
+    x: float
+        x-axis value (in data coordinates) of marker
+    y: float (optional)
+        y-axis value
+    axes: plt.Axes (optional)
+        Axes object to add markers to. Defaults to plt.gca()
+
+    ----------
+
+    xline: bool OR dictionary = True
+        shows a vertical line at the x value of the marker. If dictionary, parameters are passed
+        into Line2D.
+    yline: bool OR dictionary = True
+        shows a horizontal line at the y value of the marker. If dictionary, parameters are passed
+        into Line2D.
+    xlabel: bool OR dictionary = False
+        shows a text box of the x value of the marker at the bottom of the axes. If dictionary, parameters are passed
+        into axes.text()
+    ylabel: bool OR dictionary = False
+        shows a text box of the y value of the maker along the y axes. If dictionary, parameters are passed
+        into axes.text()
+    zlabel: bool OR dictionary = True
+        shows a text box of the z value of the marker at the data point location. If dictionary, parameters are passed
+        into axes.text()
+    xformatter: Callable = None
+        function that returns a string to be placed in the x-axis label given a x data coordinate
+            def xformatter(x: float, idx:int) -> str
+    yformatter: Callable = None
+        function that returns a string to be placed in the data label given a x and y data coordinate
+            def yformatter(x: float, y:float, idx:int) -> str
+    zformatter: Callable = None
+        function that returns a string to be placed in the z-axis label given a xy data coordinate
+            def xformatter(x: float, idx:int) -> str
+
+    Returns:
+    --------
+    Marker object
+    """
+
+    # get current axes if user did not provide one
+    if axes is None:
+        axes = plt.gca()
+
+    axes = init_axes(axes)
+
+    collection = axes.collections[0] if len(axes.collections) else None
+
+    if not isinstance(collection, QuadMesh):
         return None
+
+    # pull properties from default styles
+    properties = {}
+    for k, prop in zip(
+        ["xline", "yline", "xlabel", "ylabel", "zlabel"],
+        [xline, yline, xlabel, ylabel, zlabel],
+    ):
+        if prop is True:
+            properties[k] = axes._marker_style[k]
+        elif isinstance(prop, dict):
+            properties[k] = axes._marker_style[k]
+            for n, v in prop.items():
+                properties[k][n] = v
+
+    # get the x and y label formatters from the axes if not provided
+    if xformatter is None and axes._marker_xformatter:
+        xformatter = axes._marker_xformatter
+    if yformatter is None and axes._marker_yformatter:
+        yformatter = axes._marker_yformatter
+    if zformatter is None and axes._marker_yformatter:
+        zformatter = axes._marker_yformatter
+
+    m = artists.MeshMarker(
+        axes,
+        collection,
+        xlabel_formatter=xformatter,
+        ylabel_formatter=yformatter,
+        zlabel_formatter=yformatter,
+        **properties,
+    )
+    m.set_position(x, y)
 
     # create new marker and append to the axes marker list
     axes.markers.append(m)

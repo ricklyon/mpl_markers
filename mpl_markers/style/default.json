@@ -30,6 +30,16 @@
             "linewidth": 1.5
         }
     },
+    "zlabel": {
+        "fontsize": 8,
+        "bbox": {
+            "boxstyle": "square",
+            "facecolor": "white",
+            "edgecolor": "black",
+            "alpha": 1,
+            "linewidth": 1.5
+        }
+    },
     "xydot": {
         "markersize": 10,
         "marker": "."
