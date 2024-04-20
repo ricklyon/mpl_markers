@@ -15,7 +15,7 @@ import mpl_markers as mplm
 ```
 
 ### Line Markers
-Add a marker attached to plotted data lines:
+Add a marker attached to matplotlib data lines:
 ```python
 import numpy as np
 import matplotlib.pyplot as plt
@@ -28,9 +28,10 @@ x1 = np.linspace(-2*np.pi, 2*np.pi, 1000)
 
 ax.plot(x1, np.sin(x1)*np.cos(x1)**2)
 
-mplm.data_marker(x=0)
+mplm.line_marker(x=0)
 ```
-The marker can be dragged to any location along the data line, or moved incrementally with the left/right arrow keys.
+In GUI backends (i.e. Qt5Agg), the marker can be dragged to any location along the data line, or moved incrementally with the left/right arrow keys. Interactive markers are not supported for inline figures 
+generated in Jupyter Notebooks.
 
 ![example1](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example1.gif)
 
@@ -62,7 +63,7 @@ m = ax.pcolormesh(x, y, z, vmin=0, vmax=2)
 plt.colorbar(m)
 
 # add a data marker at a single x/y point on the plot. x/y is in data coordinates.
-mplm.data_marker(x=0.75, y=0.25)
+mplm.mesh_marker(x=0.75, y=0)
 ```
 ![example3](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example3.gif)
 
@@ -119,12 +120,12 @@ To use custom styles, pass in a dictionary of artist settings when creating the 
 For example, this line will change the color of the dotted vertical line to red.
 
 ```python
-mplm.data_marker(x=0, xline=dict(color='red', linestyle="dashed", alpha=0.5))
+mplm.line_marker(x=0, xline=dict(color='red', linestyle="dashed", alpha=0.5))
 ```
 
 To turn on/off any of the artists, pass in `True/False` for the artist key,
 ```python
-mplm.data_marker(x=0, xlabel=True, xline=False)
+mplm.line_marker(x=0, xlabel=True, xline=False)
 ```
 
 ## License
