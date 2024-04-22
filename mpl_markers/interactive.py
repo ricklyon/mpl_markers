@@ -82,12 +82,21 @@ def onrelease(event):
     m = utils.get_event_marker(axes, event)
     active_marker = axes.marker_active
 
+    # create a new marker
     if m is None and (active_marker is None or axes.figure._marker_hold):
-        markers.line_marker(x, y, axes=axes)
+        # attempt to create a pcolormesh marker if there are no lines on the plot,
+        # if the plot doesn't have a colormesh object, this will return None.
+        if not len(axes.lines):
+            markers.mesh_marker(x, y, axes=axes)
+        # if there are lines on the plot, create a line marker
+        else:
+            markers.line_marker(x, y, axes=axes)
         markers.draw_all(axes)
+    # change the active marker
     elif m is not None:
         markers.set_active(axes, m)
         markers.draw_all(axes)
+    # move the active marker
     elif active_marker is not None:
         markers.move_active(x, y, axes=axes, call_handler=True)
         markers.draw_active(axes)

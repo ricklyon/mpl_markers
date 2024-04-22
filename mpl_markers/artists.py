@@ -305,16 +305,16 @@ class LineLabel(MarkerArtist):
         # pad values in display coordinates (pixels)
         label_xpad = 10 * self.axes.figure.dpi / 100 if not self.yline else 0
 
-        # hide marker if data is not finite or NaN
-        if not np.isfinite(self._yd) or not np.isfinite(self._xd):
+        # get label position in display coordinates. Use the line axes instead of the class axes since
+        # the line may belong to another twinx/y axes and have different scaling.
+        xl, yl = utils.data2display(self.data_line.axes, (self._xd, self._yd))
+
+        # hide marker if data is not finite or is NaN
+        if np.any(~np.isfinite([self._yd, self._xd, xl, yl])):
             self.set_hidden(True)
             return
         else:
             self.set_hidden(False)
-
-        # get label position in display coordinates. Use the line axes instead of the class axes since
-        # the line may belong to another twinx/y axes and have different scaling.
-        xl, yl = utils.data2display(self.data_line.axes, (self._xd, self._yd))
 
         # set label to left side of axes if yline is active
         xl = 0 if self.yline else xl
@@ -760,7 +760,7 @@ class DataMarker(MarkerArtist):
         if not self._monotonic_xdata and x and y:
             mode = "xy"
 
-        use_alias = bool(mode == "x" and not disp and np.any(self._alias_xdata))
+        use_alias = not disp and np.any(self._alias_xdata)
         # save the arguments to update the marker position when the axes bbox changes later
         self._position_args = (x, y, disp, mode)
 

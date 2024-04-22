@@ -75,35 +75,17 @@ class TestStringMethods(unittest.TestCase):
         ax1.set_title("test_alias")
         x1_pi = np.linspace(0, 2, 1000)
         x1 = x1_pi * np.pi
-        # x2 = np.linspace(0, np.pi/2, 1000)
 
         d = np.exp(1j * x1)
-        # d[700:750]  = np.nan
-
         ax1.plot(np.real(d), np.imag(d))
 
         # set marker to angle. The xdata for the marker is the real component of d, so to set the angle we need to specify the index
-        angle1 = 3 / 4
-        angle2 = -1 / 4
+        angle1 = 3 / 2
 
         def yfmt(x, y, idx):
-            return "{:.3f}$\pi$".format(y)
-
-        def xfmt(x, y, idx):
             return "{:.3f}$\pi$".format(x)
 
-        mplm.line_marker(
-            x=angle1, yline=True, alias_xdata=x1_pi, yformatter=yfmt, xformatter=xfmt
-        )
-
-        mplm.line_marker(
-            x=angle2,
-            yline=True,
-            alias_xdata=x1_pi,
-            yformatter="{:.3f}$\pi$",
-            xformatter="{:.3f}$\pi$",
-        )
-
+        mplm.line_marker(x=angle1, alias_xdata=x1_pi, yformatter=yfmt, xline=False)
         plt.show()
 
     # @unittest.skip
@@ -177,6 +159,7 @@ class TestStringMethods(unittest.TestCase):
         theta_rad = np.deg2rad(theta)
 
         axes.plot(theta_rad, np.abs(np.sin(theta_rad)))
+        axes.set_ylim([0.5, 1])
 
         m = mplm.line_marker(x=-np.pi / 2)
         plt.show()

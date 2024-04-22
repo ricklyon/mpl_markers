@@ -380,6 +380,7 @@ def clear(axes: Axes = None):
 
     # clear marker list and active marker
     axes.markers = []
+    axes._marker_lines = []
     axes.marker_active = None
 
 
