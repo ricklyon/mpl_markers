@@ -30,10 +30,12 @@ ax.plot(x1, np.sin(x1)*np.cos(x1)**2)
 
 mplm.line_marker(x=0)
 ```
-In GUI backends (i.e. Qt5Agg), the marker can be dragged to any location along the data line, or moved incrementally with the left/right arrow keys. Interactive markers are not supported for static inline figures 
+In interactive matplotlib backends (i.e. QtAgg), the marker can be dragged to any location along the data line, or moved incrementally with the left/right arrow keys. Interactive markers are not supported for static inline figures 
 generated in Jupyter Notebooks.
 
 ![example1](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example1.gif)
+
+Additional markers can be added by using the Shift+Left Mouse button. The active marker can be removed from the plot by pressing the Delete key.
 
 ### Axis Markers
 Add an axis marker that moves freely on the canvas:
