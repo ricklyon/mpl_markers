@@ -752,8 +752,10 @@ def init_axes(
     if not hasattr(axes, "_marker_ignorelines"):
         axes._marker_ignorelines = []
 
-    axes._marker_yformatter = yformatter
-    axes._marker_xformatter = xformatter
+    if yformatter is not None or not hasattr(axes, "_marker_yformatter"):
+        axes._marker_yformatter = yformatter
+    if yformatter is not None or not hasattr(axes, "_marker_xformatter"):
+        axes._marker_xformatter = xformatter
 
     # check if there are other axes that share the same canvas (twinx or twiny axes)
     for ax_p in axes.figure.axes:
