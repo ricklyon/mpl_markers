@@ -381,7 +381,7 @@ class AxisLabel(MarkerArtist):
         ylabel: dict = None,
         xline: dict = None,
         yline: dict = None,
-        xymark: dict = None,
+        axisdot: dict = None,
         xlabel_formatter: Callable = None,
         ylabel_formatter: Callable = None,
         ref_marker: MarkerArtist = None,
@@ -391,7 +391,7 @@ class AxisLabel(MarkerArtist):
         self.ylabel = None
         self.xline = None
         self.yline = None
-        self.xymark = None
+        self.axisdot = None
         self.xlabel_formatter = xlabel_formatter
         self.ylabel_formatter = ylabel_formatter
         self.ref_marker = ref_marker
@@ -412,14 +412,14 @@ class AxisLabel(MarkerArtist):
                 axes=axes, transform=None, verticalalignment="bottom", **ylabel
             )
 
-        if xymark and xline and yline:
+        if axisdot and xline and yline:
             # initalize marker dot at data point
-            self.xymark = MarkerLine(axes=axes, **xymark)
+            self.axisdot = MarkerLine(axes=axes, **axisdot)
 
         self._xd = 0
         self._yd = 0
 
-        artists = [self.xline, self.yline, self.xymark, self.xlabel, self.ylabel]
+        artists = [self.xline, self.yline, self.axisdot, self.xlabel, self.ylabel]
         super().__init__(axes, artists)
 
         self.set_position(0, 0)
@@ -440,7 +440,7 @@ class AxisLabel(MarkerArtist):
         if disp:
             x, y = utils.display2data(self.axes, (x, y))
 
-        # set x-axes marker
+        # set x-axis marker
         if x is not None:
             # force within axes bounds
 
@@ -456,7 +456,7 @@ class AxisLabel(MarkerArtist):
                 # use reference data if available
                 if self.ref_marker:
                     lbl_xd = self._xd - self.ref_marker._xd
-                    lbl_sgn = "$\Delta$ +" if lbl_xd > 0 else "$\Delta$ -"
+                    lbl_sgn = r"$(\Delta)+$" if lbl_xd > 0 else r"$(\Delta)-$"
                     txt = utils.xformatter(
                         np.abs(lbl_xd), self._yd, None, self.axes, self.xlabel_formatter
                     )
@@ -484,7 +484,7 @@ class AxisLabel(MarkerArtist):
                 # use reference data if available
                 if self.ref_marker:
                     lbl_yd = self._yd - self.ref_marker._yd
-                    lbl_sgn = "$\Delta$ +" if lbl_yd > 0 else "$\Delta -$"
+                    lbl_sgn = r"$(\Delta)+$" if lbl_yd > 0 else r"$(\Delta)-$"
                     txt = utils.yformatter(
                         self._xd, np.abs(lbl_yd), None, self.axes, self.ylabel_formatter
                     )
@@ -499,12 +499,12 @@ class AxisLabel(MarkerArtist):
             if self.yline:
                 self.yline.set_data(self.axes.get_xlim(), [y] * 2)
 
-        if x is not None and y is not None and self.xymark:
-            self.xymark.set_data([x], [y])
-        elif x is not None and self.xymark:
-            self.xymark.set_data([x], self.axes.get_ylim()[0])
-        elif y is not None and self.xymark:
-            self.xymark.set_data(self.axes.get_xlim()[0], [y])
+        if x is not None and y is not None and self.axisdot:
+            self.axisdot.set_data([x], [y])
+        elif x is not None and self.axisdot:
+            self.axisdot.set_data([x], self.axes.get_ylim()[0])
+        elif y is not None and self.axisdot:
+            self.axisdot.set_data(self.axes.get_xlim()[0], [y])
 
     def update_positions(self):
         self.set_position(*self._position_args)
@@ -512,7 +512,7 @@ class AxisLabel(MarkerArtist):
 
 class MeshLabel(MarkerArtist):
     """
-    Places a marker label on a pcolormesh.
+    Places a marker label on a pcolormesh plot.
     """
 
     def __init__(

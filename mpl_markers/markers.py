@@ -219,10 +219,13 @@ def mesh_marker(
         ["xline", "yline", "xlabel", "ylabel", "zlabel"],
         [xline, yline, xlabel, ylabel, zlabel],
     ):
+        # pull default style if True was passed into this property
         if prop is True:
             properties[k] = axes._marker_style[k]
+        # override the default with user provided dictionaries
         elif isinstance(prop, dict):
             properties[k] = axes._marker_style[k]
+            # allow partial dictionaries
             for n, v in prop.items():
                 properties[k][n] = v
 
@@ -259,38 +262,37 @@ def mesh_marker(
 def axis_marker(
     x: float = None,
     y: float = None,
-    xline: Union[dict, bool] = None,
-    yline: Union[dict, bool] = None,
-    xlabel: Union[dict, bool] = None,
-    ylabel: Union[dict, bool] = None,
-    xymark: Union[dict, bool] = None,
-    yformatter: Callable = None,
-    xformatter: Callable = None,
     axes: plt.Axes = None,
     ref_marker: artists.AxisLabel = None,
+    xline: Union[dict, bool] = None,
+    yline: Union[dict, bool] = None,
+    axisdot: Union[dict, bool] = None,
+    xlabel: Union[dict, bool] = None,
+    ylabel: Union[dict, bool] = None,
+    yformatter: Callable = None,
+    xformatter: Callable = None,
 ):
     """
-    Adds new marker at an x-axis data value, or at the index of the x-axis array. Sets the
-    newly created marker as the active marker of the axes.
+    Adds a marker at the axis edges.
 
     Parameters
     ----------
     x: float
         x-axis value (in data coordinates) of marker
     y: float (optional)
-        y-axis value
+        y-axis value of marker
     axes: plt.Axes (optional)
         Axes object to add markers to. Defaults to plt.gca()
-    delta: Marker (optional):
-        applies only to free markers. Text label will be relative to this marker.
-    ----------
-
+    ref_marker: Marker (optional):
+        reference marker. If provided, the marker will show relative values from the reference.
     xline: bool OR dictionary = True
         shows a vertical line at the x value of the marker. If dictionary, parameters are passed
         into Line2D.
     yline: bool OR dictionary = False
         shows a horizontal line at the y value of the marker. If dictionary, parameters are passed
         into Line2D.
+    axisdot: bool OR dictionary = True
+        If True, shows a dot at the data point of the marker. If dictionary, parameters are passed into Line2D
     xlabel: bool OR dictionary = False
         shows a text box of the x value of the marker at the bottom of the axes. If dictionary, parameters are passed
         into axes.text()
@@ -303,7 +305,7 @@ def axis_marker(
     xformatter: Callable = None
         function that returns a string to be placed in the x-axis label given a x data coordinate
             def xformatter(x: float, idx:int) -> str
-
+            
     Returns:
     --------
     Marker object
@@ -325,8 +327,8 @@ def axis_marker(
     # pull properties from default styles
     properties = {}
     for k, prop in zip(
-        ["xline", "yline", "xlabel", "ylabel", "xymark"],
-        [xline, yline, xlabel, ylabel, xymark],
+        ["xline", "yline", "xlabel", "ylabel", "axisdot"],
+        [xline, yline, xlabel, ylabel, axisdot],
     ):
         if prop is True or prop is None:
             properties[k] = axes._marker_style[k]
@@ -335,6 +337,7 @@ def axis_marker(
             for n, v in prop.items():
                 properties[k][n] = v
 
+    # get the x and y label formatters from the axes if not provided
     if xformatter is None and axes._marker_xformatter:
         xformatter = axes._marker_xformatter
     if yformatter is None and axes._marker_yformatter:
@@ -358,7 +361,7 @@ def axis_marker(
 
 def clear(axes: plt.Axes = None):
     """
-    Removes all markers from axes. To remove a single marker only call remove() on Marker object.
+    Removes all markers from axes. To remove a single marker call remove() on Marker object.
 
     Parameters:
     ----------
@@ -401,7 +404,9 @@ def remove(axes: plt.Axes = None, marker: artists.MarkerArtist = None):
 
 
 def set_active(axes: plt.Axes, marker: artists.MarkerArtist):
-
+    """
+    Sets marker as the active marker on the axes.
+    """
     if not hasattr(axes, "_marker_axes"):
         return
 
@@ -459,7 +464,6 @@ def add_handler(
     handler: callable:
         def handler(xd: float, yd: float, **kwargs) -> None:
             ...
-
         The xd and yd parameter are arrays of x-axis/y-axis data values of each line on the active marker.
         kwargs are the same as the optional kwargs passed into add_handler.
     kwargs: dict (Optional)
@@ -747,16 +751,19 @@ def init_axes(
     """
     axes._marker_axes = axes
     axes._secondary_axes = []
+    
+    # load the default style sheet
+    if not hasattr(axes, "_marker_style"):
+        # read default style
+        style_path = (
+            Path(__file__).parent / "style/default.json"
+            if style_path is None
+            else style_path
+        )
+        with open(style_path) as f:
+            axes._marker_style = json.load(f)
 
-    # read default style
-    style_path = (
-        Path(__file__).parent / "style/default.json"
-        if style_path is None
-        else style_path
-    )
-    with open(style_path) as f:
-        axes._marker_style = json.load(f)
-
+    # update the marker styles with the user provided properties
     for k, prop in zip(
         ["xline", "yline", "xlabel", "ylabel", "datadot", "axisdot"],
         [xline, yline, xlabel, ylabel, datadot, axisdot],

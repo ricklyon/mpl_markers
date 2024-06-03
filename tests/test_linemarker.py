@@ -52,7 +52,7 @@ class TestLineMarker(unittest.TestCase):
         # place marker in data region with nan values
         m1 = mplm.line_marker(x=0)
         # marker outside of nan region
-        m2 = mplm.line_marker(x=-2)
+        m2 = mplm.line_marker(x=-2, axes=ax)
 
         # get list of data values for each line
         m1_xd, m1_yd = m1.get_data_points()

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 def get_event_marker(axes: plt.Axes, event) -> MarkerArtist:
     """
-    Returns the marker that was clicked on in the event
+    Returns the marker that was clicked on in from the axes event.
     """
     for m in axes.markers:
         contains = m.contains(event)
@@ -65,7 +65,7 @@ def onkey_press(event):
 
     # refresh canvas (redraw)
     elif event.key == "f5":
-        on_draw()
+        on_draw(event)
 
     # exit if event is not within an axes region or there is no active marker
     if axes is None or axes.marker_active is None:

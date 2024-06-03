@@ -5,3 +5,4 @@
 /dist
 /venv.lnk
 __pycache__/
+/tests/.figures
