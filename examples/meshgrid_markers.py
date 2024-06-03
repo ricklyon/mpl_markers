@@ -19,5 +19,3 @@ plt.colorbar(m)
 # add a data marker at a single x/y point on the plot. x/y is in data coordinates.
 mplm.mesh_marker(x=0.75, y=0.25)
 plt.show()
-
-fig.savefig(dir_ / "example3.png")

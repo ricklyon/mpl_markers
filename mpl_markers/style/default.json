@@ -40,11 +40,11 @@
             "linewidth": 1.5
         }
     },
-    "xydot": {
+    "datadot": {
         "markersize": 10,
         "marker": "."
     },
-    "xymark": {
+    "axisdot": {
         "markersize": 10,
         "marker": ".",
         "markerfacecolor":"white", 

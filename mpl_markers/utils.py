@@ -105,36 +105,3 @@ def get_artist_bbox(artist, padding: Tuple[float, float] = None):
         bbox += np.array([-pad_, pad_])
 
     return bbox
-
-
-def get_event_marker(axes, event):
-    for m in axes.markers:
-        contains = m.contains(event)
-        if contains:
-            return m
-    return None
-
-
-def get_event_axes(event):
-
-    axes = event.inaxes
-
-    if axes is None:
-        return None
-
-    tmode = axes.figure.canvas.toolbar.mode
-    if tmode != "":
-        return None
-
-    try:
-        if event.button != 1:
-            return None
-    except Exception:
-        pass
-
-    axes = event.inaxes
-
-    if hasattr(axes, "_marker_axes"):
-        return axes._marker_axes
-    else:
-        return None

@@ -206,7 +206,7 @@ class LineLabel(MarkerArtist):
         self,
         axes: Axes,
         data_line: Line2D,
-        xydot: dict = None,
+        datadot: dict = None,
         ylabel: dict = None,
         yline: dict = None,
         ylabel_formatter: Callable = None,
@@ -225,7 +225,7 @@ class LineLabel(MarkerArtist):
         """
 
         self.ylabel = None
-        self.xydot = None
+        self.datadot = None
         self.yline = None
         self.ylabel_formatter = ylabel_formatter
         self._alias_xdata = alias_xdata
@@ -245,10 +245,10 @@ class LineLabel(MarkerArtist):
                 axes=axes, transform=None, verticalalignment="bottom", **ylabel
             )
 
-        if xydot:
+        if datadot:
             # initalize marker dot at data point
-            self.xydot = MarkerLine(
-                axes=data_line.axes, color=data_line.get_color(), **xydot
+            self.datadot = MarkerLine(
+                axes=data_line.axes, color=data_line.get_color(), **datadot
             )
 
         if yline:
@@ -269,7 +269,7 @@ class LineLabel(MarkerArtist):
                 )
             )
 
-        artists = [self.yline, self.xydot, self.ylabel]
+        artists = [self.yline, self.datadot, self.ylabel]
 
         super().__init__(axes, artists)
         # set to arbitrary position to intialize member variables.
@@ -334,8 +334,8 @@ class LineLabel(MarkerArtist):
         if self.yline:
             self.yline.set_data(self.axes.get_xlim(), [self._yd] * 2)
 
-        if self.xydot:
-            self.xydot.set_data([self._xd], [self._yd])
+        if self.datadot:
+            self.datadot.set_data([self._xd], [self._yd])
 
     def set_position(
         self, x: float = None, y: float = None, disp: bool = False, mode: str = None
@@ -381,7 +381,7 @@ class AxisLabel(MarkerArtist):
         ylabel: dict = None,
         xline: dict = None,
         yline: dict = None,
-        xymark: dict = None,
+        axisdot: dict = None,
         xlabel_formatter: Callable = None,
         ylabel_formatter: Callable = None,
         ref_marker: MarkerArtist = None,
@@ -391,7 +391,7 @@ class AxisLabel(MarkerArtist):
         self.ylabel = None
         self.xline = None
         self.yline = None
-        self.xymark = None
+        self.axisdot = None
         self.xlabel_formatter = xlabel_formatter
         self.ylabel_formatter = ylabel_formatter
         self.ref_marker = ref_marker
@@ -412,14 +412,14 @@ class AxisLabel(MarkerArtist):
                 axes=axes, transform=None, verticalalignment="bottom", **ylabel
             )
 
-        if xymark and xline and yline:
+        if axisdot and xline and yline:
             # initalize marker dot at data point
-            self.xymark = MarkerLine(axes=axes, **xymark)
+            self.axisdot = MarkerLine(axes=axes, **axisdot)
 
         self._xd = 0
         self._yd = 0
 
-        artists = [self.xline, self.yline, self.xymark, self.xlabel, self.ylabel]
+        artists = [self.xline, self.yline, self.axisdot, self.xlabel, self.ylabel]
         super().__init__(axes, artists)
 
         self.set_position(0, 0)
@@ -440,7 +440,7 @@ class AxisLabel(MarkerArtist):
         if disp:
             x, y = utils.display2data(self.axes, (x, y))
 
-        # set x-axes marker
+        # set x-axis marker
         if x is not None:
             # force within axes bounds
 
@@ -456,7 +456,7 @@ class AxisLabel(MarkerArtist):
                 # use reference data if available
                 if self.ref_marker:
                     lbl_xd = self._xd - self.ref_marker._xd
-                    lbl_sgn = "$\Delta$ +" if lbl_xd > 0 else "$\Delta$ -"
+                    lbl_sgn = r"$(\Delta)+$" if lbl_xd > 0 else r"$(\Delta)-$"
                     txt = utils.xformatter(
                         np.abs(lbl_xd), self._yd, None, self.axes, self.xlabel_formatter
                     )
@@ -484,7 +484,7 @@ class AxisLabel(MarkerArtist):
                 # use reference data if available
                 if self.ref_marker:
                     lbl_yd = self._yd - self.ref_marker._yd
-                    lbl_sgn = "$\Delta$ +" if lbl_yd > 0 else "$\Delta -$"
+                    lbl_sgn = r"$(\Delta)+$" if lbl_yd > 0 else r"$(\Delta)-$"
                     txt = utils.yformatter(
                         self._xd, np.abs(lbl_yd), None, self.axes, self.ylabel_formatter
                     )
@@ -499,12 +499,12 @@ class AxisLabel(MarkerArtist):
             if self.yline:
                 self.yline.set_data(self.axes.get_xlim(), [y] * 2)
 
-        if x is not None and y is not None and self.xymark:
-            self.xymark.set_data([x], [y])
-        elif x is not None and self.xymark:
-            self.xymark.set_data([x], self.axes.get_ylim()[0])
-        elif y is not None and self.xymark:
-            self.xymark.set_data(self.axes.get_xlim()[0], [y])
+        if x is not None and y is not None and self.axisdot:
+            self.axisdot.set_data([x], [y])
+        elif x is not None and self.axisdot:
+            self.axisdot.set_data([x], self.axes.get_ylim()[0])
+        elif y is not None and self.axisdot:
+            self.axisdot.set_data(self.axes.get_xlim()[0], [y])
 
     def update_positions(self):
         self.set_position(*self._position_args)
@@ -512,7 +512,7 @@ class AxisLabel(MarkerArtist):
 
 class MeshLabel(MarkerArtist):
     """
-    Places a marker label on a pcolormesh.
+    Places a marker label on a pcolormesh plot.
     """
 
     def __init__(
@@ -535,7 +535,7 @@ class MeshLabel(MarkerArtist):
         """
 
         self.zlabel = None
-        self.xydot = None
+        self.datadot = None
         self.zlabel_formatter = zlabel_formatter
         self.quadmesh = quadmesh
         self.coords = (
@@ -555,7 +555,7 @@ class MeshLabel(MarkerArtist):
             )
 
         # initalize marker dot at data point
-        self.xydot = MarkerLine(
+        self.datadot = MarkerLine(
             axes=axes,
             markeredgewidth=1,
             markeredgecolor="k",
@@ -572,7 +572,7 @@ class MeshLabel(MarkerArtist):
             marker=".",
         )
 
-        artists = [self.xydot_outer, self.xydot, self.zlabel]
+        artists = [self.xydot_outer, self.datadot, self.zlabel]
 
         super().__init__(axes, artists)
         # set to arbitrary position to intialize member variables.
@@ -634,13 +634,13 @@ class MeshLabel(MarkerArtist):
                 (xl, yl), txt, anchor="center left", disp=True, offset=(label_xpad, 0)
             )
 
-        if self.xydot:
-            self.xydot.set_data([self._xd], [self._yd])
+        if self.datadot:
+            self.datadot.set_data([self._xd], [self._yd])
             self.xydot_outer.set_data([self._xd], [self._yd])
             # set the color of the dot
             z_norm = self.quadmesh.norm(self._zd)
-            plt.setp(self.xydot, markerfacecolor=self.quadmesh.cmap(z_norm))
-            self.xydot.set_color(self.quadmesh.cmap(z_norm))
+            plt.setp(self.datadot, markerfacecolor=self.quadmesh.cmap(z_norm))
+            self.datadot.set_color(self.quadmesh.cmap(z_norm))
 
     def set_position(self, x: float, y: float, disp: bool = False):
         """
@@ -670,7 +670,7 @@ class DataMarker(MarkerArtist):
         lines: list[Line2D],
         xlabel: dict = None,
         ylabel: dict = None,
-        xydot: dict = None,
+        datadot: dict = None,
         xline: dict = None,
         yline: dict = None,
         xlabel_formatter: Callable = None,
@@ -699,7 +699,7 @@ class DataMarker(MarkerArtist):
                 self._monotonic_xdata = np.all(diff >= 0) or np.all(diff <= 0)
 
         # check that ylines have associated labels or dots
-        if yline and not (ylabel or xydot):
+        if yline and not (ylabel or datadot):
             raise TypeError("y-axis lines require labels or marker dots.")
 
         # create single x-axes label shared by all the data markers
@@ -709,10 +709,12 @@ class DataMarker(MarkerArtist):
             )
 
         # data labels for each line
-        if ylabel or xydot or yline:
+        if ylabel or datadot or yline:
             # turn off ylabel on data markers if yline is present. The axes label will be used as the data label.
             self.data_labels = [
-                LineLabel(axes, ln, xydot, ylabel, yline, ylabel_formatter, alias_xdata)
+                LineLabel(
+                    axes, ln, datadot, ylabel, yline, ylabel_formatter, alias_xdata
+                )
                 for ln in lines
             ]
 
@@ -757,7 +759,7 @@ class DataMarker(MarkerArtist):
         """
 
         # override the placement mode if lines aren't monotonic
-        if not self._monotonic_xdata and x and y:
+        if x and y:
             mode = "xy"
 
         use_alias = not disp and np.any(self._alias_xdata)
