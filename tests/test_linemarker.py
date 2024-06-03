@@ -171,7 +171,7 @@ class TestLineMarker(unittest.TestCase):
             x=angle,
             alias_xdata=x1_deg,
             xline=False,
-            yformatter=lambda x, y, idx: f"{x1_deg[idx]:.2f}$^\circ$",
+            yformatter=lambda x, y, idx: r"{:.2f}$^\circ$".format(x1_deg[idx]),
             lines=ln1,
         )
 
@@ -197,7 +197,7 @@ class TestLineMarker(unittest.TestCase):
                 fontfamily="monospace",
                 color="teal",
                 fontsize=8,
-                bbox=dict(linewidth=0),
+                bbox=dict(linewidth=0, facecolor="none"),
             ),
             xline=dict(linewidth=2, color="teal", alpha=0.2),
             xlabel=dict(fontfamily="monospace", color="teal", fontsize=8),
