@@ -20,14 +20,11 @@ Add a marker attached to matplotlib data lines:
 import numpy as np
 import matplotlib.pyplot as plt
 
-plt.style.use('ggplot')
-plt.rc('font', size=7)
-
 fig, ax = plt.subplots(1,1)
 x1 = np.linspace(-2*np.pi, 2*np.pi, 1000)
 
 ax.plot(x1, np.sin(x1)*np.cos(x1)**2)
-
+# create line marker at x=0.
 mplm.line_marker(x=0)
 ```
 In interactive matplotlib backends (i.e. QtAgg), the marker can be dragged to any location along the data line, or moved incrementally with the left/right arrow keys. Interactive markers are not supported for static inline figures 
@@ -38,19 +35,22 @@ generated in Jupyter Notebooks.
 Additional markers can be added by using the Shift+Left Mouse button. The active marker can be removed from the plot by pressing the Delete key.
 
 ### Axis Markers
-Add an axis marker that moves freely on the canvas:
+Axis markers move freely on the canvas and are not attached to data lines. Axis markers can
+reference other markers to create a delta marker.
 ```python
-ax.xaxis.set_major_formatter(lambda x, pos: '{:.2f}$\pi$'.format(x/np.pi))
-mplm.axis_marker(x=0, y=-0.2)
-```
+fig, ax = plt.subplots(1, 1)
+y1 = np.random.normal(6, 3, size=10)
 
-![example2](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example2.gif)
+ax.bar(np.arange(10), y1)
+ax.margins(x=0.2)
 
-`set_major_formatter` will set the formatting for the axes ticks and the marker label. To only 
-format the label, use the following,
-```python
-mplm.axis_marker(x=0, y=-0.2, xformatter="{:.2f}$\pi$", yformatter="{:.2f}$\pi$")
+# create horizontal axis marker
+m1 = mplm.axis_marker(y=np.min(y1), yformatter="{:.2f}")
+
+# create second marker that is referenced from the first marker m1
+mplm.axis_marker(y=np.max(y1), ref_marker=m1, yformatter="{:.2f}")
 ```
+![example2](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example2.png)
 
 ### Meshgrid Markers
 Data markers can also be added to `pcolormesh` plots. The marker label shows the value of the color-mapped z data.
@@ -105,11 +105,11 @@ The marker style is controlled by the `mpl_markers/style/default.json` file:
             "linewidth": 1.5
         }
     },
-    "xydot": {
+    "datadot": {
         "markersize": 10,
         "marker": "."
     },
-    "xymark": {
+    "axisdot": {
         "markersize": 10,
         "marker": ".",
         "markerfacecolor":"white", 
@@ -119,11 +119,24 @@ The marker style is controlled by the `mpl_markers/style/default.json` file:
 
 ```
 To use custom styles, pass in a dictionary of artist settings when creating the marker that matches the keys in this file.
-For example, this line will change the color of the dotted vertical line to red.
+For example, this will turn off the box around the data label:
 
 ```python
-mplm.line_marker(x=0, xline=dict(color='red', linestyle="dashed", alpha=0.5))
+mplm.line_marker(
+    x=0,             
+    ylabel=dict(bbox=dict(linewidth=0, facecolor="none"))
+)
 ```
+
+Or, to set the style for every future marker on the plot, use `mplm.init_axes`. This does not affect
+existing markers.
+```python
+mplm.init_axes(
+    axes=ax1,       
+    ylabel=dict(bbox=dict(linewidth=0, facecolor="none"))
+)
+```
+
 
 To turn on/off any of the artists, pass in `True/False` for the artist key,
 ```python

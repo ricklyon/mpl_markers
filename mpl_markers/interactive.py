@@ -1,6 +1,7 @@
 from . import markers
-from . artists import MarkerArtist
+from .artists import MarkerArtist
 import matplotlib.pyplot as plt
+
 
 def get_event_marker(axes: plt.Axes, event) -> MarkerArtist:
     """
@@ -15,7 +16,7 @@ def get_event_marker(axes: plt.Axes, event) -> MarkerArtist:
 
 def get_event_axes(event) -> plt.Axes:
     """
-    Returns the axes that triggered the button click event. 
+    Returns the axes that triggered the button click event.
     Acts as an event mask, only returns axes if triggered by a left button click,
     and if no toolbar functions are active.
     """
@@ -42,12 +43,14 @@ def get_event_axes(event) -> plt.Axes:
     else:
         return None
 
+
 def onkey_release(event):
     """
     Clears flag when shift is released.
     """
     if event.key == "shift":
         event.canvas.figure._marker_hold = False
+
 
 def onkey_press(event):
     """
@@ -70,7 +73,7 @@ def onkey_press(event):
     # exit if event is not within an axes region or there is no active marker
     if axes is None or axes.marker_active is None:
         return
-    
+
     # set flag if shift is pressed
     if event.key == "shift":
         event.canvas.figure._marker_hold = True
@@ -94,6 +97,7 @@ def onkey_press(event):
     elif event.key == "delete":
         markers.remove(axes)
         markers.draw_all(axes)
+
 
 def onmotion(event):
     """
@@ -128,9 +132,10 @@ def onclick(event):
     if m is not None and axes.marker_active != m:
         markers.set_active(axes, m)
 
+
 def onrelease(event):
     """
-    Event handler for left mouse button releases. Moves the active marker to the location where button 
+    Event handler for left mouse button releases. Moves the active marker to the location where button
     was released.
     """
     x = event.xdata
@@ -162,11 +167,13 @@ def onrelease(event):
     else:
         return
 
+
 def on_draw(event):
     """
     Triggered whenever the canvas is drawn (i.e. resize events).
     """
     markers.init_canvas(event.canvas.figure, event)
+
 
 def canvas_draw(figure: plt.Figure, renderer=None):
     """

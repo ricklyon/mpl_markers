@@ -712,7 +712,9 @@ class DataMarker(MarkerArtist):
         if ylabel or datadot or yline:
             # turn off ylabel on data markers if yline is present. The axes label will be used as the data label.
             self.data_labels = [
-                LineLabel(axes, ln, datadot, ylabel, yline, ylabel_formatter, alias_xdata)
+                LineLabel(
+                    axes, ln, datadot, ylabel, yline, ylabel_formatter, alias_xdata
+                )
                 for ln in lines
             ]
 

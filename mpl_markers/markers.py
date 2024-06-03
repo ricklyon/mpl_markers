@@ -305,7 +305,7 @@ def axis_marker(
     xformatter: Callable = None
         function that returns a string to be placed in the x-axis label given a x data coordinate
             def xformatter(x: float, idx:int) -> str
-            
+
     Returns:
     --------
     Marker object
@@ -698,6 +698,7 @@ def init_canvas(fig: plt.Figure, event=None):
         for axes in fig._marker_axes:
             [m.set_visible(False) for m in axes.markers]
 
+
 def init_axes(
     axes: plt.Axes,
     style_path: Path = None,
@@ -709,7 +710,7 @@ def init_axes(
     axisdot: dict = None,
     xlabel: dict = None,
     ylabel: dict = None,
-    handler: Callable[[np.ndarray, np.ndarray, Optional[dict]], None] = None
+    handler: Callable[[np.ndarray, np.ndarray, Optional[dict]], None] = None,
 ) -> plt.Axes:
     """
     Compiles a list of axes lines that will accept marker y-labels and validates the x-axis data of each.
@@ -751,7 +752,7 @@ def init_axes(
     """
     axes._marker_axes = axes
     axes._secondary_axes = []
-    
+
     # load the default style sheet
     if not hasattr(axes, "_marker_style"):
         # read default style

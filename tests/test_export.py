@@ -4,8 +4,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 
+
 class TestExportMarkers(unittest.TestCase):
-           
+
     def test_svg_pdf(self):
         fig_dir = Path(__file__).parent / ".figures"
 
@@ -21,6 +22,7 @@ class TestExportMarkers(unittest.TestCase):
         dir_ = Path(__file__).parent
         fig.savefig(fig_dir / "mpl_test.pdf")
         fig.savefig(fig_dir / "mpl_test.svg")
+
 
 if __name__ == "__main__":
     unittest.main()

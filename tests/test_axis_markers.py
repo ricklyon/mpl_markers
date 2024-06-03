@@ -9,26 +9,26 @@ from parameterized import parameterized
 FIG_NAMES = (
     "test_axis_markers.png",
     "test_axis_single.png",
-    "test_axis_formatting.png"
+    "test_axis_formatting.png",
 )
 
+
 class TestAxisMarker(unittest.TestCase):
-    
+
     @classmethod
     def setUpClass(cls):
         cls.fig_dir = Path(__file__).parent / ".figures"
         cls.fig_dir.mkdir(exist_ok=True)
-        
+
         cls.ref_fig_dir = Path(__file__).parent / "reference_figures"
 
     @parameterized.expand(FIG_NAMES)
     def test_zfigures(self, figname):
-        """ checks generated figures against references """
+        """checks generated figures against references"""
 
         figdata = plt.imread(self.fig_dir / figname)
         refdata = plt.imread(self.ref_fig_dir / figname)
         np.testing.assert_array_almost_equal(figdata, refdata)
-
 
     def test_axis_markers(self):
         fig, ax = plt.subplots(1, 1)
@@ -59,9 +59,14 @@ class TestAxisMarker(unittest.TestCase):
         ax.bar(np.arange(10), np.sin(np.arange(10)))
 
         mplm.init_axes(
-            axes = ax,
-            ylabel=dict(fontfamily="monospace", color="teal", fontsize=8, bbox=dict(linewidth=0, facecolor='none')),
-            yformatter="{:.3f}\n"
+            axes=ax,
+            ylabel=dict(
+                fontfamily="monospace",
+                color="teal",
+                fontsize=8,
+                bbox=dict(linewidth=0, facecolor="none"),
+            ),
+            yformatter="{:.3f}\n",
         )
 
         m1 = mplm.axis_marker(
@@ -69,6 +74,7 @@ class TestAxisMarker(unittest.TestCase):
         )
 
         fig.savefig(self.fig_dir / "test_axis_formatting.png")
+
 
 if __name__ == "__main__":
     unittest.main()

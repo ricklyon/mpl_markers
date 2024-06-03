@@ -16,28 +16,29 @@ FIG_NAMES = (
     "test_handler.png",
     "test_axis_limits.png",
     "test_polar.png",
-    "test_polar_nan.png"
+    "test_polar_nan.png",
 )
 
+
 class TestLineMarker(unittest.TestCase):
-    
+
     @classmethod
     def setUpClass(cls):
         cls.fig_dir = Path(__file__).parent / ".figures"
         cls.fig_dir.mkdir(exist_ok=True)
-        
+
         cls.ref_fig_dir = Path(__file__).parent / "reference_figures"
 
     @parameterized.expand(FIG_NAMES)
     def test_zfigures(self, figname):
-        """ checks generated figures against references """
+        """checks generated figures against references"""
 
         figdata = plt.imread(self.fig_dir / figname)
         refdata = plt.imread(self.ref_fig_dir / figname)
         np.testing.assert_array_almost_equal(figdata, refdata)
 
     def test_nan_values(self):
-        """ checks markers on lines with partial NaN data """
+        """checks markers on lines with partial NaN data"""
 
         fig, ax = plt.subplots(1, 1)
         ax.set_title("test_nan_values")
@@ -70,18 +71,18 @@ class TestLineMarker(unittest.TestCase):
 
         # verify that the first line marker is hidden since it is nan
         self.assertTrue(m1.data_labels[0].ylabel._hidden)
-        # second line should be 
+        # second line should be
         self.assertFalse(m1.data_labels[1].ylabel._hidden)
 
         fig.savefig(self.fig_dir / "test_nan_values.png")
 
     def test_out_of_bounds(self):
-        """ tests marker placement if set to a out of bounds x value"""
+        """tests marker placement if set to a out of bounds x value"""
 
         fig, ax = plt.subplots(1, 1)
         ax.set_title("test_out_of_bounds")
 
-        ax.plot(2*np.arange(10))
+        ax.plot(2 * np.arange(10))
         m1 = mplm.line_marker(x=-1)
         m2 = mplm.line_marker(x=11)
 
@@ -94,16 +95,16 @@ class TestLineMarker(unittest.TestCase):
         np.testing.assert_equal(m2_yd, 18)
 
         fig.savefig(self.fig_dir / "test_out_of_bounds.png")
-        
+
     def test_axlines_ignore(self):
-        """ checks that markers do not attach to vertical or horizontal axlines """
+        """checks that markers do not attach to vertical or horizontal axlines"""
         fig, ax = plt.subplots(1, 1)
         ax.set_title("test_axlines_ignore")
 
-        ax.plot(2*np.arange(10))
+        ax.plot(2 * np.arange(10))
         ax.axhline(y=5)
         ax.axvline(x=6)
-        
+
         m1 = mplm.line_marker(x=4)
         m1_xd, m1_yd = m1.get_data_points()
 
@@ -114,23 +115,23 @@ class TestLineMarker(unittest.TestCase):
         fig.savefig(self.fig_dir / "test_axlines_ignore.png")
 
     def test_set_xy(self):
-        """ sets a marker using both x and y data points """
+        """sets a marker using both x and y data points"""
         fig, ax = plt.subplots(1, 1)
         ax.set_title("test_set_xy")
 
-        ax.plot(20*np.arange(10))
+        ax.plot(20 * np.arange(10))
         m1 = mplm.line_marker(x=4, y=100)
         m1_xd, m1_yd = m1.get_data_points()
 
-        # since the y values is much greater than the x values, 
+        # since the y values is much greater than the x values,
         # the marker should snap to the nearest y value instead of x.
         self.assertEqual(m1_yd[0], 100)
         self.assertEqual(m1_xd[0], 5)
 
         fig.savefig(self.fig_dir / "test_set_xy.png")
 
-    def test_unequal_xdata(self): 
-        """ checks that markers work if lines have unequal data lengths """
+    def test_unequal_xdata(self):
+        """checks that markers work if lines have unequal data lengths"""
 
         fig, ax = plt.subplots(1, 1)
         ax.set_title("test_unequal_xdata")
@@ -150,7 +151,7 @@ class TestLineMarker(unittest.TestCase):
         fig.savefig(self.fig_dir / "test_unequal_xdata.png")
 
     def test_alias(self):
-        """ use alias data to set the marker at a angle instead of xy point. """
+        """use alias data to set the marker at a angle instead of xy point."""
         fig, (ax1) = plt.subplots(1, 1)
         ax1.set_title("test_alias")
         ax1.set_aspect("equal")
@@ -160,7 +161,7 @@ class TestLineMarker(unittest.TestCase):
         d = np.exp(1j * x1)
         d[400:600] = np.nan
         ln1 = ax1.plot(np.real(d), np.imag(d))
-        ln2 = ax1.plot(0.9*np.real(d[:200]), 0.9*np.imag(d[:200]))
+        ln2 = ax1.plot(0.9 * np.real(d[:200]), 0.9 * np.imag(d[:200]))
 
         # marker shows the angle in the ylabel box instead of the y data, which in this case
         # would be the imaginary part.
@@ -171,8 +172,8 @@ class TestLineMarker(unittest.TestCase):
             alias_xdata=x1_deg,
             xline=False,
             yformatter=lambda x, y, idx: f"{x1_deg[idx]:.2f}$^\circ$",
-            lines=ln1
-        ) 
+            lines=ln1,
+        )
 
         m1_xd, m1_yd = m1.get_data_points()
         np.testing.assert_almost_equal(np.cos(np.deg2rad(angle)), m1_xd, decimal=2)
@@ -192,16 +193,20 @@ class TestLineMarker(unittest.TestCase):
 
         m = mplm.line_marker(
             x=0,
-            ylabel=dict(fontfamily="monospace", color="teal", fontsize=8, bbox=dict(linewidth=0, facecolor='none')),
+            ylabel=dict(
+                fontfamily="monospace",
+                color="teal",
+                fontsize=8,
+                bbox=dict(linewidth=0),
+            ),
             xline=dict(linewidth=2, color="teal", alpha=0.2),
             xlabel=dict(fontfamily="monospace", color="teal", fontsize=8),
         )
 
         fig.savefig(self.fig_dir / "test_marker_properties.png")
 
-
     def test_handler(self):
-        """ check marker handlers, used to link markers across different axes """
+        """check marker handlers, used to link markers across different axes"""
         fig, (ax1, ax2) = plt.subplots(2, 1)
         ax1.set_title("test_handler")
 
@@ -240,13 +245,13 @@ class TestLineMarker(unittest.TestCase):
         np.testing.assert_array_almost_equal(m1_xd, 2, decimal=2)
         np.testing.assert_array_almost_equal(m2_xd, 2, decimal=2)
         np.testing.assert_array_almost_equal(m1_yd[0], np.sin(2), decimal=2)
-        np.testing.assert_array_almost_equal(m1_yd[1], 2* np.cos(2), decimal=2)
+        np.testing.assert_array_almost_equal(m1_yd[1], 2 * np.cos(2), decimal=2)
         np.testing.assert_array_almost_equal(m2_yd[0], np.cos(2), decimal=2)
 
         fig.savefig(self.fig_dir / "test_handler.png")
 
     def test_axis_limits(self):
-        """ checks that axis limits are not modified by marker objects"""
+        """checks that axis limits are not modified by marker objects"""
         fig, ax = plt.subplots(1, 1)
         ax.set_title("test_axis_limits")
         x1 = np.linspace(np.pi, 2 * np.pi, 1000)
@@ -262,7 +267,7 @@ class TestLineMarker(unittest.TestCase):
         fig.savefig(self.fig_dir / "test_axis_limits.png")
 
     def test_polar(self):
-        """ test polar markers """
+        """test polar markers"""
         fig, (ax1) = plt.subplots(1, 1, subplot_kw={"projection": "polar"})
         ax1.set_title("test_polar")
         x2 = np.linspace(-np.pi, np.pi, 1000)
@@ -273,14 +278,14 @@ class TestLineMarker(unittest.TestCase):
         m = mplm.line_marker(x=np.pi / 3)
 
         m_x, m_y = m.get_data_points()
-        np.testing.assert_array_almost_equal(m_x, np.pi /3, decimal=2)
-        np.testing.assert_array_almost_equal(m_y[0], np.cos(np.pi /3) ** 2, decimal=2)
-        np.testing.assert_array_almost_equal(m_y[1], np.cos(np.pi /3), decimal=2)
+        np.testing.assert_array_almost_equal(m_x, np.pi / 3, decimal=2)
+        np.testing.assert_array_almost_equal(m_y[0], np.cos(np.pi / 3) ** 2, decimal=2)
+        np.testing.assert_array_almost_equal(m_y[1], np.cos(np.pi / 3), decimal=2)
 
         fig.savefig(self.fig_dir / "test_polar.png")
 
     def test_polar_nan(self):
-        """ tests polar markers on data that is below the axes y limit"""
+        """tests polar markers on data that is below the axes y limit"""
         fig, ax1 = plt.subplots(1, 1, subplot_kw=dict(polar=True))
 
         ax1.set_title("test_polar_nan")
@@ -301,9 +306,12 @@ class TestLineMarker(unittest.TestCase):
         np.testing.assert_array_almost_equal(m2_x, np.pi / 10, decimal=2)
 
         np.testing.assert_array_almost_equal(m1_y, 1, decimal=2)
-        np.testing.assert_array_almost_equal(m2_x, np.abs(np.sin(np.pi / 10)), decimal=2)
+        np.testing.assert_array_almost_equal(
+            m2_x, np.abs(np.sin(np.pi / 10)), decimal=2
+        )
 
         fig.savefig(self.fig_dir / "test_polar_nan.png")
-        
+
+
 if __name__ == "__main__":
     unittest.main()
