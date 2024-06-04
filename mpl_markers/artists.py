@@ -759,7 +759,7 @@ class DataMarker(MarkerArtist):
         """
 
         # override the placement mode if lines aren't monotonic
-        if x and y:
+        if (x and y) and not (self._monotonic_xdata):
             mode = "xy"
 
         use_alias = not disp and np.any(self._alias_xdata)

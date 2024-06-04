@@ -1,0 +1,15 @@
+{
+    "git.ignoreMissingGitWarning": true,
+    "editor.rulers": [
+        120
+    ],
+    "editor.formatOnSave": false,
+    "[python]": {
+        "diffEditor.ignoreTrimWhitespace": false,
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true,
+    },
+
+    "terminal.integrated.defaultProfile.windows": "Command Prompt",
+    "jupyter.askForKernelRestart": false,
+}

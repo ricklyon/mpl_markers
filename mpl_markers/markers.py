@@ -490,17 +490,25 @@ def add_handler(
 
 
 def move_active(
-    x: float, y: float = None, call_handler: bool = False, axes: plt.Axes = None
+    x: float,
+    y: float = None,
+    call_handler: bool = False,
+    axes: plt.Axes = None,
+    disp: bool = False,
 ):
     """
     Moves the active marker to a point along the x-axis.
 
     Parameters:
     ----------
+    x: float
+        x-axis value in data coordinates to move the x-marker to.
+    y: float (Optional)
+        y-axis value in data coordinates to move the x-marker to.
     axes: mpl.Axes
         matplotlib axes object
-    xd: float (Optional)
-        x-axis value in data coordinates to move the x-marker to.
+    disp: bool (Optional)
+        If True, x and y coordinates are interpreted as display coordinates instead of data coordinates.
     """
     if axes is None:
         axes = plt.gca()
@@ -510,7 +518,7 @@ def move_active(
         return
 
     # move the marker and redraw it
-    axes.marker_active.set_position(x=x, y=y)
+    axes.marker_active.set_position(x=x, y=y, disp=disp)
     draw_active(axes)
 
     # call the axes handler if it exists

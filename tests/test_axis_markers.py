@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 from parameterized import parameterized
-
+from test_variables import SHOW_INTERACTIVE
 
 FIG_NAMES = (
     "test_axis_markers.png",
@@ -28,6 +28,10 @@ class TestAxisMarker(unittest.TestCase):
 
         figdata = plt.imread(self.fig_dir / figname)
         refdata = plt.imread(self.ref_fig_dir / figname)
+
+        if SHOW_INTERACTIVE:
+            plt.show()
+
         np.testing.assert_array_almost_equal(figdata, refdata)
 
     def test_axis_markers(self):

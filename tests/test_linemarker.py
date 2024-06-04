@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 from parameterized import parameterized
+from test_variables import SHOW_INTERACTIVE
 
 FIG_NAMES = (
     "test_nan_values.png",
@@ -35,6 +36,9 @@ class TestLineMarker(unittest.TestCase):
 
         figdata = plt.imread(self.fig_dir / figname)
         refdata = plt.imread(self.ref_fig_dir / figname)
+
+        if SHOW_INTERACTIVE:
+            plt.show()
         np.testing.assert_array_almost_equal(figdata, refdata)
 
     def test_nan_values(self):
@@ -123,10 +127,9 @@ class TestLineMarker(unittest.TestCase):
         m1 = mplm.line_marker(x=4, y=100)
         m1_xd, m1_yd = m1.get_data_points()
 
-        # since the y values is much greater than the x values,
-        # the marker should snap to the nearest y value instead of x.
-        self.assertEqual(m1_yd[0], 100)
-        self.assertEqual(m1_xd[0], 5)
+        # marker should snap to nearest x value since data is monotonic
+        self.assertEqual(m1_yd[0], 80)
+        self.assertEqual(m1_xd[0], 4)
 
         fig.savefig(self.fig_dir / "test_set_xy.png")
 
