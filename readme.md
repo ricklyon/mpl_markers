@@ -1,6 +1,6 @@
 # mpl-markers
 
-Interactive data markers for line plots in matplotlib
+Interactive data markers for matplotlib.
 
 ## Installation
 
@@ -124,16 +124,18 @@ For example, this will turn off the box around the data label:
 ```python
 mplm.line_marker(
     x=0,             
-    ylabel=dict(bbox=dict(linewidth=0, facecolor="none"))
+    ylabel=dict(fontsize=11, bbox=dict(linewidth=0, facecolor="none"))
 )
 ```
+![example3](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example4.gif)
+
 
 Or, to set the style for every future marker on the plot, use `mplm.init_axes`. This does not affect
 existing markers.
 ```python
 mplm.init_axes(
     axes=ax1,       
-    ylabel=dict(bbox=dict(linewidth=0, facecolor="none"))
+    ylabel=dict(fontsize=11, bbox=dict(linewidth=0, facecolor="none"))
 )
 ```
 
