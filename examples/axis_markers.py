@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 plt.style.use("ggplot")
 
-fig, ax = plt.subplots(1, 1)
+fig, ax = plt.subplots(1, 1, figsize=(5, 4))
 y1 = np.random.normal(6, 3, size=10)
 ax.bar(np.arange(10), y1)
 ax.margins(x=0.2)
