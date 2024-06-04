@@ -119,13 +119,13 @@ The marker style is controlled by the `mpl_markers/style/default.json` file:
 
 ```
 To use custom styles on a single marker, pass in a dictionary of artist settings that matches the keys in this file. To turn on/off any of the artists, pass in `True/False` instead of a dictionary. 
-For example, this will turn off the box around the data label and remove the xline:
+For example, this will turn off the box around the data label and add an xlabel artist.
 
 ```python
 mplm.line_marker(
     x=np.pi/4,             
     ylabel=dict(fontfamily="monospace", bbox=dict(linewidth=0, facecolor="none")),
-    xline=False
+    xlabel=True
 )
 ```
 ![example3](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example4.png)
