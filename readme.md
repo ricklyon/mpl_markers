@@ -27,7 +27,7 @@ ax.plot(x1, np.sin(x1)*np.cos(x1)**2)
 # create line marker at x=0.
 mplm.line_marker(x=0)
 ```
-In interactive matplotlib backends (i.e. Qt5Agg), the marker can be dragged to any location along the data line, or moved incrementally with the left/right arrow keys. Interactive markers are not supported for static inline figures 
+In interactive matplotlib backends (i.e. Qt5Agg), the marker can be dragged to any location along the data line, or moved incrementally with the left/right arrow keys. Interactive markers are not supported for inline figures 
 generated in Jupyter Notebooks.
 
 ![example1](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example1.gif)
@@ -45,10 +45,10 @@ ax.bar(np.arange(10), y1)
 ax.margins(x=0.2)
 
 # create horizontal axis marker
-m1 = mplm.axis_marker(y=np.min(y1), yformatter="{:.2f}")
+m1 = mplm.axis_marker(y=np.min(y1), yformatter="{:.2f}%")
 
 # create second marker that is referenced from the first marker m1
-mplm.axis_marker(y=np.max(y1), ref_marker=m1, yformatter="{:.2f}")
+mplm.axis_marker(y=np.max(y1), ref_marker=m1, yformatter="{:.2f}%")
 ```
 ![example2](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example2.png)
 
@@ -118,7 +118,7 @@ The marker style is controlled by the `mpl_markers/style/default.json` file:
 }
 
 ```
-To use custom styles, pass in a dictionary of artist settings when creating the marker that matches the keys in this file. To turn on/off any of the artists, pass in `True/False` instead of a dictionary. 
+To use custom styles on a single marker, pass in a dictionary of artist settings that matches the keys in this file. To turn on/off any of the artists, pass in `True/False` instead of a dictionary. 
 For example, this will turn off the box around the data label and remove the xline:
 
 ```python
@@ -130,15 +130,10 @@ mplm.line_marker(
 ```
 ![example3](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example4.png)
 
+Custom .json files are supported with the `mplm.set_style` method. This will set the style on all future markers and must have the same keys as the default.json file.
 
-Or, to set the style for every future marker on the plot, use `mplm.init_axes`. This does not affect
-existing markers.
 ```python
-mplm.init_axes(
-    axes=ax1,       
-    ylabel=dict(fontfamily="monospace", bbox=dict(linewidth=0, facecolor="none")),
-    xline=False
-)
+mplm.set_style("user_style.json")
 ```
 
 ## License

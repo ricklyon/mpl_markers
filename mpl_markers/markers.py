@@ -15,6 +15,7 @@ __all__ = (
     "line_marker",
     "mesh_marker",
     "axis_marker",
+    "set_style",
     "clear",
     "remove",
     "disable_lines",
@@ -24,6 +25,8 @@ __all__ = (
     "draw_all",
     "init_axes",
 )
+
+_global_style_file = Path(__file__).parent / "style/default.json"
 
 
 def line_marker(
@@ -147,6 +150,7 @@ def line_marker(
 def mesh_marker(
     x: float = None,
     y: float = None,
+    axes: plt.Axes = None,
     xline: Union[dict, bool] = True,
     yline: Union[dict, bool] = True,
     xlabel: Union[dict, bool] = False,
@@ -155,9 +159,8 @@ def mesh_marker(
     xformatter: Callable = None,
     yformatter: Callable = None,
     zformatter: Callable = None,
-    axes: plt.Axes = None,
     call_handler: bool = False,
-):
+) -> artists.MeshMarker:
     """
     Adds new marker on a pcolormesh plot.
 
@@ -169,9 +172,6 @@ def mesh_marker(
         y-axis value
     axes: plt.Axes (optional)
         Axes object to add markers to. Defaults to plt.gca()
-
-    ----------
-
     xline: bool OR dictionary = True
         shows a vertical line at the x value of the marker. If dictionary, parameters are passed
         into Line2D.
@@ -271,7 +271,7 @@ def axis_marker(
     ylabel: Union[dict, bool] = None,
     yformatter: Callable = None,
     xformatter: Callable = None,
-):
+) -> artists.AxisLabel:
     """
     Adds a marker at the axis edges.
 
@@ -357,6 +357,19 @@ def axis_marker(
     axes.marker_active = m
 
     return m
+
+
+def set_style(path: Path):
+    """
+    Sets the style globally on all future markers.
+
+    Parameters:
+    -----------
+    path: Path
+        path to a .json file that matches the structure of "style/default.json"
+    """
+    global _global_style_file
+    _global_style_file = Path(path)
 
 
 def clear(axes: plt.Axes = None):
@@ -719,8 +732,9 @@ def init_axes(
     ----------
     axes: mpl.Axes
         matplotlib axes object
-    ----------
-
+    style_path: Path
+        path to a .json file that matches the structure of "style/default.json". Style is
+        applied to markers on this axes only.
     xline: bool OR dictionary = True
         shows a vertical line at the x value of the marker. If dictionary, parameters are passed
         into Line2D.
@@ -756,11 +770,7 @@ def init_axes(
     # load the default style sheet
     if not hasattr(axes, "_marker_style"):
         # read default style
-        style_path = (
-            Path(__file__).parent / "style/default.json"
-            if style_path is None
-            else style_path
-        )
+        style_path = _global_style_file if style_path is None else style_path
         with open(style_path) as f:
             axes._marker_style = json.load(f)
 
