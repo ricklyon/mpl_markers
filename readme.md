@@ -21,7 +21,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 fig, ax = plt.subplots(1,1)
-x1 = np.linspace(-2*np.pi, 2*np.pi, 1000)
+x1 = np.linspace(-np.pi, np.pi, 1000)
 
 ax.plot(x1, np.sin(x1)*np.cos(x1)**2)
 # create line marker at x=0.
@@ -124,10 +124,10 @@ For example, this will turn off the box around the data label:
 ```python
 mplm.line_marker(
     x=0,             
-    ylabel=dict(fontsize=11, bbox=dict(linewidth=0, facecolor="none"))
+    ylabel=dict(fontfamily="monospace", bbox=dict(linewidth=0, facecolor="none"))
 )
 ```
-![example3](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example4.gif)
+![example3](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example4.png)
 
 
 Or, to set the style for every future marker on the plot, use `mplm.init_axes`. This does not affect
@@ -135,7 +135,7 @@ existing markers.
 ```python
 mplm.init_axes(
     axes=ax1,       
-    ylabel=dict(fontsize=11, bbox=dict(linewidth=0, facecolor="none"))
+    ylabel=dict(fontfamily="monospace", bbox=dict(linewidth=0, facecolor="none"))
 )
 ```
 
