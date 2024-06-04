@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "mpl-markers"
 version = "0.0.9"
-description = "interactive marker support for matplotlib"
+description = "interactive data markers for matplotlib"
 readme = "README.md"
 authors = [{ name = "Rick Lyon", email = "rlyon14@gmail.com" }]
 license = { file = "LICENSE" }
@@ -22,7 +22,15 @@ dependencies = [
 requires-python = ">=3.7"
 
 [project.optional-dependencies]
-dev = ["black", "flake8", "pytest", "bumpversion"]
+dev = [
+    "black", 
+    "flake8", 
+    "pytest", 
+    "bumpversion", 
+    "parameterized", 
+    "pyqt5", 
+    "ipykernel"
+]
 
 [tool.setuptools.packages.find]
 include = ["mpl_markers"]
