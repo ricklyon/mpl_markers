@@ -10,9 +10,16 @@ ax.bar(np.arange(10), y1)
 ax.margins(x=0.2)
 
 # create horizontal axis marker
-m1 = mplm.axis_marker(y=np.min(y1), yformatter="{:.2f}%", ylabel=dict(fontfamily="monospace"))
+m1 = mplm.axis_marker(
+    y=np.min(y1), yformatter="{:.2f}%", ylabel=dict(fontfamily="monospace")
+)
 
 # # create second marker that is referenced from the first marker m1
-mplm.axis_marker(y=np.max(y1), ref_marker=m1, yformatter="{:.2f}%", ylabel=dict(fontfamily="monospace"))
+mplm.axis_marker(
+    y=np.max(y1),
+    ref_marker=m1,
+    yformatter="{:.2f}%",
+    ylabel=dict(fontfamily="monospace"),
+)
 
 plt.show()
