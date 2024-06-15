@@ -119,7 +119,7 @@ The marker style is controlled by the `mpl_markers/style/default.json` file:
 
 ```
 To use custom styles on a single marker, pass in a dictionary of artist settings that matches the keys in this file. To turn on/off any of the artists, pass in `True/False` instead of a dictionary. 
-For example, this will turn off the box around the data label and add an xlabel artist.
+For example, this will turn off the box around the data label and add an xlabel artist:
 
 ```python
 mplm.line_marker(
@@ -130,7 +130,7 @@ mplm.line_marker(
 ```
 ![example3](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example4.png)
 
-Custom .json files are supported with the `mplm.set_style` method. This will set the style on all future markers and must have the same keys as the default.json file.
+Custom .json files are supported with the `mplm.set_style` method. This will set the style on all future markers and must have the same keys as the default.json file:
 
 ```python
 mplm.set_style("user_style.json")
