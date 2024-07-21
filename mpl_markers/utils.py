@@ -16,68 +16,51 @@ def display2data(axes, point):
     return axes.transData.inverted().transform(point)
 
 
-def yformatter(
-    xd: float, yd: float, idx: int, axes: Axes, custom: Callable = None
+def label_formatter(
+    axes: Axes,
+    xd: float,
+    yd: float,
+    idx: int = None,
+    custom: Union[Callable, str] = None,
+    mode: str = "x",
 ) -> str:
     """
     Returns a formatted string for the y-label marker at the data points xd, yd.
     """
-    tick_yformatter = axes.yaxis.get_major_formatter()
-    ret = ""
 
-    if isinstance(custom, Callable):
-        # try calling with the x, y data points first
-        try:
-            return custom(xd, yd, idx)
-        # call with just the y-data if above failed
-        except TypeError:
-            return custom(yd)
+    if custom is not None:
+        if isinstance(custom, Callable):
+            # try calling with the x, y data points first
+            try:
+                return custom(xd, yd, idx)
+            # call with just the x-data or y-data if above failed
+            except TypeError:
+                return custom(xd if mode == "x" else yd)
 
-    # formatting string
-    elif isinstance(custom, str):
-        return custom.format(yd)
+        # custom formatting string
+        else:
+            return custom.format(xd if mode == "x" else yd)
 
-    # use ticker formatter if scalar or fixed formatter
-    elif not isinstance(
-        tick_yformatter, (ticker.ScalarFormatter, ticker.FixedFormatter)
-    ):
-        return tick_yformatter(yd)
+    # attempt to use tick formatter
+    axis = axes.xaxis if mode == "x" else axes.yaxis
+    tick_formatter = axis.get_major_formatter()
+    tick_value = tick_formatter(yd)
 
-    # otherwise default to basic format
-    else:
-        return "{:.3f}".format(yd)
+    if isinstance(tick_formatter, ticker.LogFormatter):
+        # log tick formatter returns an empty string if not near a tick marker,
+        # implement it manually
+        lbl = "{:.2e}".format(xd if mode == "x" else yd)
+        e_idx = lbl.index("e")
+        val, multiplier = lbl[:e_idx], int(lbl[e_idx + 1 :])
+        return "{}$\\times 10^{{{}}}$".format(val, multiplier)
 
-
-def xformatter(
-    xd: float, yd: float, idx: int, axes: Axes, custom: Callable = None
-) -> str:
-    """
-    Returns a formatted string for the x-label marker at the data point xd.
-    """
-    tick_xformatter = axes.xaxis.get_major_formatter()
-    ret = ""
-
-    if isinstance(custom, Callable):
-        # try calling with the x, y data points first
-        try:
-            return custom(xd, yd, idx)
-        # call with just the x-data if above failed
-        except TypeError:
-            return custom(xd)
-
-    # formatting string
-    elif isinstance(custom, str):
-        return custom.format(xd)
-
-    # use ticker formatter if scalar or fixed formatter
-    elif not isinstance(
-        tick_xformatter, (ticker.ScalarFormatter, ticker.FixedFormatter)
-    ):
-        return tick_xformatter(xd)
+    # use ticker formatter if not a scalar
+    elif not isinstance(tick_formatter, ticker.ScalarFormatter) and tick_value:
+        return tick_value
 
     # otherwise default to basic format
     else:
-        return "{:.3f}".format(xd)
+        return "{:.3f}".format(xd if mode == "x" else yd)
 
 
 def get_artist_bbox(artist, padding: Tuple[float, float] = None):

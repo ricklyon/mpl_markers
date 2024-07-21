@@ -18,6 +18,7 @@ FIG_NAMES = (
     "test_axis_limits.png",
     "test_polar.png",
     "test_polar_nan.png",
+    "test_log_scale.png",
 )
 
 
@@ -40,6 +41,24 @@ class TestLineMarker(unittest.TestCase):
         if SHOW_INTERACTIVE:
             plt.show()
         np.testing.assert_array_almost_equal(figdata, refdata)
+
+    def test_log_scale(self):
+
+        fig = plt.figure()
+        ax = fig.add_subplot()
+        ax.set_title("test_log_scale")
+
+        x = np.logspace(-1, 1, 100)
+        ax.loglog(x, np.exp(-x))
+
+        m1 = mplm.axis_marker(y=0.032)
+        m2 = mplm.line_marker(x=3.4, xlabel=True)
+
+        if SHOW_INTERACTIVE:
+            plt.show()
+
+        fig.savefig(self.fig_dir / "test_log_scale.png")
+        self.assertEqual(m2.data_labels[0].ylabel.get_text(), "3.24$\\times 10^{-2}$")
 
     def test_nan_values(self):
         """checks markers on lines with partial NaN data"""

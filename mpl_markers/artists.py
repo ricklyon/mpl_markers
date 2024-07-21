@@ -322,8 +322,8 @@ class LineLabel(MarkerArtist):
         if self.ylabel:
             # set the x position to the data point location plus a small pad (in display coordinates)
             xd_lbl = self._alias_xdata[idx] if np.any(self._alias_xdata) else self._xd
-            txt = utils.yformatter(
-                xd_lbl, self._yd, self._idx, self.axes, self.ylabel_formatter
+            txt = utils.label_formatter(
+                self.axes, xd_lbl, self._yd, self._idx, self.ylabel_formatter, mode="y"
             )
 
             self.ylabel.set_position(
@@ -457,13 +457,21 @@ class AxisLabel(MarkerArtist):
                 if self.ref_marker:
                     lbl_xd = self._xd - self.ref_marker._xd
                     lbl_sgn = r"$(\Delta)+$" if lbl_xd > 0 else r"$(\Delta)-$"
-                    txt = utils.xformatter(
-                        np.abs(lbl_xd), self._yd, None, self.axes, self.xlabel_formatter
+                    txt = utils.label_formatter(
+                        self.axes,
+                        np.abs(lbl_xd),
+                        self._yd,
+                        custom=self.xlabel_formatter,
+                        mode="x",
                     )
                     lbl = lbl_sgn + txt
                 else:
-                    lbl = utils.xformatter(
-                        self._xd, self._yd, None, self.axes, self.xlabel_formatter
+                    lbl = utils.label_formatter(
+                        self.axes,
+                        self._xd,
+                        self._yd,
+                        custom=self.xlabel_formatter,
+                        mode="x",
                     )
 
                 xl, _ = utils.data2display(self.axes, (x, 0))
@@ -485,13 +493,21 @@ class AxisLabel(MarkerArtist):
                 if self.ref_marker:
                     lbl_yd = self._yd - self.ref_marker._yd
                     lbl_sgn = r"$(\Delta)+$" if lbl_yd > 0 else r"$(\Delta)-$"
-                    txt = utils.yformatter(
-                        self._xd, np.abs(lbl_yd), None, self.axes, self.ylabel_formatter
+                    txt = utils.label_formatter(
+                        self.axes,
+                        self._xd,
+                        np.abs(lbl_yd),
+                        custom=self.ylabel_formatter,
+                        mode="y",
                     )
                     lbl = lbl_sgn + txt
                 else:
-                    lbl = utils.yformatter(
-                        self._xd, self._yd, None, self.axes, self.ylabel_formatter
+                    lbl = utils.label_formatter(
+                        self.axes,
+                        self._xd,
+                        self._yd,
+                        custom=self.ylabel_formatter,
+                        mode="y",
                     )
 
                 self.ylabel.set_position((0, yl), lbl, anchor="center left", disp=True)
@@ -626,8 +642,13 @@ class MeshLabel(MarkerArtist):
 
         if self.zlabel:
             # set the x position to the data point location plus a small pad (in display coordinates)
-            txt = utils.yformatter(
-                self._xd, self._zd, self._xidx, self.axes, self.zlabel_formatter
+            txt = utils.label_formatter(
+                self.axes,
+                self._xd,
+                self._zd,
+                self._xidx,
+                self.zlabel_formatter,
+                mode="y",
             )
 
             self.zlabel.set_position(
