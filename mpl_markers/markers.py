@@ -43,6 +43,7 @@ def line_marker(
     ylabel: Union[dict, bool] = True,
     xformatter: Callable = None,
     yformatter: Callable = None,
+    anchor: str = "center left",
 ) -> artists.DataMarker:
     """
     Adds a line marker to cartesian or polar plot.
@@ -82,7 +83,9 @@ def line_marker(
     yformatter: Callable = None
         function that returns a string to be placed in the data label given a x and y data coordinate
             def yformatter(x: float, y:float, idx:int) -> str
-
+    anchor: str = None
+        anchor point for the y-axis data labels. One of "upper/lower/center left/right/center". Default is
+        "center left"
     Returns:
     --------
     Marker object
@@ -130,6 +133,7 @@ def line_marker(
         xlabel_formatter=xformatter,
         ylabel_formatter=yformatter,
         alias_xdata=alias_xdata,
+        anchor=anchor,
         **properties,
     )
 
@@ -160,6 +164,7 @@ def mesh_marker(
     yformatter: Callable = None,
     zformatter: Callable = None,
     call_handler: bool = False,
+    anchor: str = "center left",
 ) -> artists.MeshMarker:
     """
     Adds new marker on a pcolormesh plot.
@@ -196,6 +201,9 @@ def mesh_marker(
     zformatter: Callable = None
         function that returns a string to be placed in the z-axis label given a xy data coordinate
             def xformatter(x: float, idx:int) -> str
+    anchor: str = None
+        anchor point for the data labels. One of "upper/lower/center left/right/center". Default is
+        "center left"
 
     Returns:
     --------
@@ -243,6 +251,7 @@ def mesh_marker(
         xlabel_formatter=xformatter,
         ylabel_formatter=yformatter,
         zlabel_formatter=yformatter,
+        anchor=anchor,
         **properties,
     )
     m.set_position(x, y)

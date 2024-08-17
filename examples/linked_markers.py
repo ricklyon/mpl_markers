@@ -40,7 +40,7 @@ mplm.init_axes(ax1, handler=link_ax1)
 mplm.init_axes(ax2, handler=link_ax2)
 
 # create markers on each axes
-m1 = mplm.line_marker(x=1, axes=ax1, xlabel=True)
+m1 = mplm.line_marker(x=1, axes=ax1, xlabel=True, anchor="center right")
 m2 = mplm.line_marker(x=1, axes=ax2, xlabel=True)
 
 # click and drag markers on the axes

@@ -102,13 +102,13 @@ class MarkerLabel(AbstractArtist, matplotlib.text.Text):
 
         # first word in loc is vertical position, second is horizontal
         loc_v, loc_h = anchor.split()
-        v_offset = {"upper": -ylen, "center": -ylen / 2, "lower": 0}[loc_v]
-        h_offset = {"left": 0, "center": -xlen / 2, "right": -xlen}[loc_h]
+        # move the label up by the offset if the anchor is at the bottom, down by the offset if anchor is top,
+        # same thing for left/right placement.
+        v_offset = {"upper": -ylen - offset[1], "center": -(ylen / 2), "lower": offset[1]}[loc_v]
+        h_offset = {"left": offset[0], "center": -(xlen / 2), "right": -xlen - offset[0]}[loc_h]
 
         # apply correction to find the position of the lower left corner
-        b_left, b_lower = (
-            np.array(point) + np.array([h_offset, v_offset]) + np.array(offset)
-        )
+        b_left, b_lower = np.array(point) + np.array([h_offset, v_offset])
 
         # build bbox positions for a label placed at the upper left point
         l_bbox = np.array([[b_left, b_lower], [b_left + xlen, b_lower + ylen]])
@@ -211,6 +211,7 @@ class LineLabel(MarkerArtist):
         yline: dict = None,
         ylabel_formatter: Callable = None,
         alias_xdata: np.ndarray = None,
+        anchor: str = "center left"
     ):
         """
         Parameters:
@@ -234,6 +235,7 @@ class LineLabel(MarkerArtist):
         self._idx = None
         self._xd = None
         self._yd = None
+        self._anchor = anchor
 
         if ylabel:
             # change the edge color of the text box to the line color
@@ -327,7 +329,7 @@ class LineLabel(MarkerArtist):
             )
 
             self.ylabel.set_position(
-                (xl, yl), txt, anchor="center left", disp=True, offset=(label_xpad, 0)
+                (xl, yl), txt, anchor=self._anchor, disp=True, offset=(label_xpad, 0)
             )
             # get the text label from the formatter
 
@@ -537,6 +539,7 @@ class MeshLabel(MarkerArtist):
         quadmesh: QuadMesh,
         zlabel: dict = None,
         zlabel_formatter: Callable = None,
+        anchor: str = "center left"
     ):
         """
         Parameters:
@@ -563,6 +566,7 @@ class MeshLabel(MarkerArtist):
         self._xidx = None
         self._xd = None
         self._yd = None
+        self._anchor = anchor
 
         if zlabel:
             # initalize text box as the label
@@ -652,7 +656,7 @@ class MeshLabel(MarkerArtist):
             )
 
             self.zlabel.set_position(
-                (xl, yl), txt, anchor="center left", disp=True, offset=(label_xpad, 0)
+                (xl, yl), txt, anchor=self._anchor, disp=True, offset=(label_xpad, 0)
             )
 
         if self.datadot:
@@ -697,6 +701,7 @@ class DataMarker(MarkerArtist):
         xlabel_formatter: Callable = None,
         ylabel_formatter: Callable = None,
         alias_xdata: np.ndarray = None,
+        anchor: str = "center left"
     ):
         """
         Parameters:
@@ -711,6 +716,7 @@ class DataMarker(MarkerArtist):
         self.ylabel_artists = []
         self.axes = axes
         self._alias_xdata = alias_xdata
+        self._anchor = anchor
 
         # check if all lines have monotonic x-axis data
         self._monotonic_xdata = True
@@ -734,7 +740,7 @@ class DataMarker(MarkerArtist):
             # turn off ylabel on data markers if yline is present. The axes label will be used as the data label.
             self.data_labels = [
                 LineLabel(
-                    axes, ln, datadot, ylabel, yline, ylabel_formatter, alias_xdata
+                    axes, ln, datadot, ylabel, yline, ylabel_formatter, alias_xdata, anchor=anchor
                 )
                 for ln in lines
             ]
@@ -937,6 +943,7 @@ class MeshMarker(MarkerArtist):
         xlabel_formatter: Callable = None,
         ylabel_formatter: Callable = None,
         zlabel_formatter: Callable = None,
+        anchor: str = None
     ):
         """
         Parameters:
@@ -965,7 +972,7 @@ class MeshMarker(MarkerArtist):
             )
 
         # label for the z data
-        self.data_label = MeshLabel(axes, quadmesh, zlabel, zlabel_formatter)
+        self.data_label = MeshLabel(axes, quadmesh, zlabel, zlabel_formatter, anchor=anchor)
 
         # build list of all artists in the marker
         # line and dot artists first
