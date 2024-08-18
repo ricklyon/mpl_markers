@@ -7,7 +7,7 @@
     "[python]": {
         "diffEditor.ignoreTrimWhitespace": false,
         "editor.defaultFormatter": "ms-python.black-formatter",
-        "editor.formatOnSave": true,
+        "editor.formatOnSave": false,
     },
 
     "terminal.integrated.defaultProfile.windows": "Command Prompt",
