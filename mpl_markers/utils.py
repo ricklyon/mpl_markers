@@ -44,7 +44,7 @@ def label_formatter(
     # attempt to use tick formatter
     axis = axes.xaxis if mode == "x" else axes.yaxis
     tick_formatter = axis.get_major_formatter()
-    tick_value = tick_formatter(yd)
+    tick_value = tick_formatter(xd if mode == "x" else yd)
 
     if isinstance(tick_formatter, ticker.LogFormatter):
         # log tick formatter returns an empty string if not near a tick marker,
