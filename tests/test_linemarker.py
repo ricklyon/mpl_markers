@@ -74,7 +74,7 @@ class TestLineMarker(unittest.TestCase):
         ax.plot(x1, np.cos(x1))
 
         # place marker in data region with nan values
-        m1 = mplm.line_marker(x=0)
+        m1 = mplm.line_marker(x=0, anchor="center right")
         # marker outside of nan region
         m2 = mplm.line_marker(x=-2, axes=ax)
 
