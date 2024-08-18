@@ -75,6 +75,7 @@ class MarkerLabel(AbstractArtist, matplotlib.text.Text):
         anchor: str = "upper left",
         disp: bool = False,
         offset: Tuple[float, float] = None,
+        ax_pad: Tuple[float, float] = None
     ):
         """
         Set label position and text
@@ -111,35 +112,52 @@ class MarkerLabel(AbstractArtist, matplotlib.text.Text):
         b_left, b_lower = np.array(point) + np.array([h_offset, v_offset])
 
         # build bbox positions for a label placed at the upper left point
-        l_bbox = np.array([[b_left, b_lower], [b_left + xlen, b_lower + ylen]])
+        l_bbox = np.array([
+            [b_left, b_lower], 
+            [b_left + xlen, b_lower + ylen]
+        ])
 
         # force label within axes bounds
-        ax_pad = self.axes.figure.dpi / 15
+        if ax_pad is None:
+            ax_pad = [self.axes.figure.dpi / 10] * 2
+        
         # make axes smaller with negative padding
-        ax_bbox = utils.get_artist_bbox(self.axes, (-ax_pad, -ax_pad))
+        ax_bbox = utils.get_artist_bbox(self.axes, -np.array(ax_pad))
 
         # arrays to subtract label bbox from axes bbox
         ax_sub = np.array([[1, 1], [-1, -1]])
         l_sub = np.array([[-1, -1], [1, 1]])
         # distance that each point extrudes past the axes limits. If the label is fully within axes, the
         # value will be negative and clip will force it to 0.
-        lowerleft_ex, upperright_ex = np.clip(
+        bbox_extrude = np.clip(
             (l_bbox * l_sub) + (ax_bbox * ax_sub), 0, None
         )
 
-        if np.any(offset):
-            # if user specified an offset, mirror around the placement point to attempt to bring the label back in bounds
-            l_bbox += (np.array([xlen, ylen]) + 2 * np.array(offset)) * (
-                1 * (lowerleft_ex > 0) - 1 * (upperright_ex > 0)
-            )
-            # recompute the extrusion distances
-            lowerleft_ex, upperright_ex = np.clip(
-                (l_bbox * l_sub) + (ax_bbox * ax_sub), 0, None
-            )
+        extrude = (bbox_extrude > 0).astype("int")
 
-        # add extruded distances to label bbox to force within bounds
-        l_bbox += lowerleft_ex
-        l_bbox -= upperright_ex
+        if np.any(offset):
+            # flip the anchor point to the other side of the label if it extends past the axes limit.
+            # these dictionaries determine how much the label should be shifted to effectively flip the anchor point.
+            v_ax_shift = {
+                "upper": ylen + (2 * offset[1]), "center": (ylen / 2) + offset[1], "lower": ylen + (2 * offset[1])
+            }[loc_v]
+
+            h_ax_shift = {
+                "left": xlen + (2 * offset[1]), "center": (xlen / 2) + offset[1], "right": xlen + (2 * offset[1])
+            }[loc_h]
+
+            # apply the shift to the label bbox
+            l_bbox_shift = np.array([
+                [h_ax_shift, v_ax_shift], 
+                [-h_ax_shift, -v_ax_shift]
+            ])
+            l_bbox += np.sum(l_bbox_shift * extrude, axis=0)
+
+        else:
+            # if there is no offset provided, ignore the anchor point and force the label to be in bounds
+            l_bbox += bbox_extrude[0]
+            l_bbox -= bbox_extrude[1]
+
 
         # use lower left bbox point for placement
         # AbstractArtist should not have a set_position method, so this will use set_position from mpl.Text
@@ -305,7 +323,8 @@ class LineLabel(MarkerArtist):
         self._yd = np.real(self._ydata[idx])
 
         # pad values in display coordinates (pixels)
-        label_xpad = 10 * self.axes.figure.dpi / 100 if not self.yline else 0
+        label_xpad = self.axes.figure.dpi / 10 if not self.yline else 0
+        label_ypad = self.axes.figure.dpi / 10
 
         # get label position in display coordinates. Use the line axes instead of the class axes since
         # the line may belong to another twinx/y axes and have different scaling.
@@ -329,7 +348,7 @@ class LineLabel(MarkerArtist):
             )
 
             self.ylabel.set_position(
-                (xl, yl), txt, anchor=self._anchor, disp=True, offset=(label_xpad, 0)
+                (xl, yl), txt, anchor=self._anchor, disp=True, offset=(label_xpad, label_ypad)
             )
             # get the text label from the formatter
 
@@ -439,6 +458,8 @@ class AxisLabel(MarkerArtist):
 
         self._position_args = (x, y, disp, x_alias)
 
+        dpi = self.axes.figure.dpi
+
         if disp:
             x, y = utils.display2data(self.axes, (x, y))
 
@@ -477,7 +498,7 @@ class AxisLabel(MarkerArtist):
                     )
 
                 xl, _ = utils.data2display(self.axes, (x, 0))
-                self.xlabel.set_position((xl, 0), lbl, anchor="lower center", disp=True)
+                self.xlabel.set_position((xl, 0), lbl, anchor="lower center", disp=True, ax_pad=(dpi / 15, dpi / 15))
 
             if self.xline:
                 self.xline.set_data([x] * 2, self.axes.get_ylim())
@@ -512,7 +533,7 @@ class AxisLabel(MarkerArtist):
                         mode="y",
                     )
 
-                self.ylabel.set_position((0, yl), lbl, anchor="center left", disp=True)
+                self.ylabel.set_position((0, yl), lbl, anchor="center left", disp=True, ax_pad=(dpi / 15, dpi / 15))
 
             if self.yline:
                 self.yline.set_data(self.axes.get_xlim(), [y] * 2)
@@ -631,7 +652,7 @@ class MeshLabel(MarkerArtist):
         self._zd = self.quadmesh.get_array()[xidx, yidx]
 
         # pad values in display coordinates (pixels)
-        label_xpad = 15 * self.axes.figure.dpi / 100
+        label_pad = self.axes.figure.dpi / 8
 
         # hide marker if data is not finite or NaN
         if not np.isfinite(self._zd):
@@ -656,7 +677,7 @@ class MeshLabel(MarkerArtist):
             )
 
             self.zlabel.set_position(
-                (xl, yl), txt, anchor=self._anchor, disp=True, offset=(label_xpad, 0)
+                (xl, yl), txt, anchor=self._anchor, disp=True, offset=(label_pad, label_pad)
             )
 
         if self.datadot:
@@ -834,12 +855,19 @@ class DataMarker(MarkerArtist):
         self.set_position(*self._position_args)
 
     def _space_labels(self):
+        """
+        Prevent vertical overlap on data labels.
+        """
 
-        ax_pad = self.axes.figure.dpi / 15
+        ax_pad = self.axes.figure.dpi / 10
+        # use half the normal label pad since each label has a pad and it will be doubled
+        # when labels are stacked on top of each oter.
+        label_pad = self.axes.figure.dpi / 20
+
         # make axes smaller with negative padding
         ax_bbox = utils.get_artist_bbox(self.axes, (-ax_pad, -ax_pad))
 
-        pad = np.array([4, 4])
+        pad = np.array([label_pad, label_pad])
         vis_artists = [obj for obj in self.ylabel_artists if not obj._hidden]
         if not len(vis_artists):
             return
@@ -860,7 +888,7 @@ class DataMarker(MarkerArtist):
         # negative values indicate margin, positive values indicate overlap
         bbox_ovl_upper = s_bbox - np.roll(bbox_above, 1, axis=1)
         # this is invalid for the last (top) box since it doesn't have
-        # an upper neighbor. Set to the
+        # an upper neighbor.
         bbox_ovl_upper[-1] = -np.inf
 
         # overlap of each box with the one below it
