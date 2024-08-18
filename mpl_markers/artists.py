@@ -75,7 +75,7 @@ class MarkerLabel(AbstractArtist, matplotlib.text.Text):
         anchor: str = "upper left",
         disp: bool = False,
         offset: Tuple[float, float] = None,
-        ax_pad: Tuple[float, float] = None
+        ax_pad: Tuple[float, float] = None,
     ):
         """
         Set label position and text
@@ -105,22 +105,27 @@ class MarkerLabel(AbstractArtist, matplotlib.text.Text):
         loc_v, loc_h = anchor.split()
         # move the label up by the offset if the anchor is at the bottom, down by the offset if anchor is top,
         # same thing for left/right placement.
-        v_offset = {"upper": -ylen - offset[1], "center": -(ylen / 2), "lower": offset[1]}[loc_v]
-        h_offset = {"left": offset[0], "center": -(xlen / 2), "right": -xlen - offset[0]}[loc_h]
+        v_offset = {
+            "upper": -ylen - offset[1],
+            "center": -(ylen / 2),
+            "lower": offset[1],
+        }[loc_v]
+        h_offset = {
+            "left": offset[0],
+            "center": -(xlen / 2),
+            "right": -xlen - offset[0],
+        }[loc_h]
 
         # apply correction to find the position of the lower left corner
         b_left, b_lower = np.array(point) + np.array([h_offset, v_offset])
 
         # build bbox positions for a label placed at the upper left point
-        l_bbox = np.array([
-            [b_left, b_lower], 
-            [b_left + xlen, b_lower + ylen]
-        ])
+        l_bbox = np.array([[b_left, b_lower], [b_left + xlen, b_lower + ylen]])
 
         # force label within axes bounds
         if ax_pad is None:
             ax_pad = [self.axes.figure.dpi / 10] * 2
-        
+
         # make axes smaller with negative padding
         ax_bbox = utils.get_artist_bbox(self.axes, -np.array(ax_pad))
 
@@ -129,9 +134,7 @@ class MarkerLabel(AbstractArtist, matplotlib.text.Text):
         l_sub = np.array([[-1, -1], [1, 1]])
         # distance that each point extrudes past the axes limits. If the label is fully within axes, the
         # value will be negative and clip will force it to 0.
-        bbox_extrude = np.clip(
-            (l_bbox * l_sub) + (ax_bbox * ax_sub), 0, None
-        )
+        bbox_extrude = np.clip((l_bbox * l_sub) + (ax_bbox * ax_sub), 0, None)
 
         extrude = (bbox_extrude > 0).astype("int")
 
@@ -139,25 +142,27 @@ class MarkerLabel(AbstractArtist, matplotlib.text.Text):
             # flip the anchor point to the other side of the label if it extends past the axes limit.
             # these dictionaries determine how much the label should be shifted to effectively flip the anchor point.
             v_ax_shift = {
-                "upper": ylen + (2 * offset[1]), "center": (ylen / 2) + offset[1], "lower": ylen + (2 * offset[1])
+                "upper": ylen + (2 * offset[1]),
+                "center": (ylen / 2) + offset[1],
+                "lower": ylen + (2 * offset[1]),
             }[loc_v]
 
             h_ax_shift = {
-                "left": xlen + (2 * offset[1]), "center": (xlen / 2) + offset[1], "right": xlen + (2 * offset[1])
+                "left": xlen + (2 * offset[1]),
+                "center": (xlen / 2) + offset[1],
+                "right": xlen + (2 * offset[1]),
             }[loc_h]
 
             # apply the shift to the label bbox
-            l_bbox_shift = np.array([
-                [h_ax_shift, v_ax_shift], 
-                [-h_ax_shift, -v_ax_shift]
-            ])
+            l_bbox_shift = np.array(
+                [[h_ax_shift, v_ax_shift], [-h_ax_shift, -v_ax_shift]]
+            )
             l_bbox += np.sum(l_bbox_shift * extrude, axis=0)
 
         else:
             # if there is no offset provided, ignore the anchor point and force the label to be in bounds
             l_bbox += bbox_extrude[0]
             l_bbox -= bbox_extrude[1]
-
 
         # use lower left bbox point for placement
         # AbstractArtist should not have a set_position method, so this will use set_position from mpl.Text
@@ -229,7 +234,7 @@ class LineLabel(MarkerArtist):
         yline: dict = None,
         ylabel_formatter: Callable = None,
         alias_xdata: np.ndarray = None,
-        anchor: str = "center left"
+        anchor: str = "center left",
     ):
         """
         Parameters:
@@ -348,7 +353,11 @@ class LineLabel(MarkerArtist):
             )
 
             self.ylabel.set_position(
-                (xl, yl), txt, anchor=self._anchor, disp=True, offset=(label_xpad, label_ypad)
+                (xl, yl),
+                txt,
+                anchor=self._anchor,
+                disp=True,
+                offset=(label_xpad, label_ypad),
             )
             # get the text label from the formatter
 
@@ -498,7 +507,13 @@ class AxisLabel(MarkerArtist):
                     )
 
                 xl, _ = utils.data2display(self.axes, (x, 0))
-                self.xlabel.set_position((xl, 0), lbl, anchor="lower center", disp=True, ax_pad=(dpi / 15, dpi / 15))
+                self.xlabel.set_position(
+                    (xl, 0),
+                    lbl,
+                    anchor="lower center",
+                    disp=True,
+                    ax_pad=(dpi / 15, dpi / 15),
+                )
 
             if self.xline:
                 self.xline.set_data([x] * 2, self.axes.get_ylim())
@@ -533,7 +548,13 @@ class AxisLabel(MarkerArtist):
                         mode="y",
                     )
 
-                self.ylabel.set_position((0, yl), lbl, anchor="center left", disp=True, ax_pad=(dpi / 15, dpi / 15))
+                self.ylabel.set_position(
+                    (0, yl),
+                    lbl,
+                    anchor="center left",
+                    disp=True,
+                    ax_pad=(dpi / 15, dpi / 15),
+                )
 
             if self.yline:
                 self.yline.set_data(self.axes.get_xlim(), [y] * 2)
@@ -560,7 +581,7 @@ class MeshLabel(MarkerArtist):
         quadmesh: QuadMesh,
         zlabel: dict = None,
         zlabel_formatter: Callable = None,
-        anchor: str = "center left"
+        anchor: str = "center left",
     ):
         """
         Parameters:
@@ -677,7 +698,11 @@ class MeshLabel(MarkerArtist):
             )
 
             self.zlabel.set_position(
-                (xl, yl), txt, anchor=self._anchor, disp=True, offset=(label_pad, label_pad)
+                (xl, yl),
+                txt,
+                anchor=self._anchor,
+                disp=True,
+                offset=(label_pad, label_pad),
             )
 
         if self.datadot:
@@ -722,7 +747,7 @@ class DataMarker(MarkerArtist):
         xlabel_formatter: Callable = None,
         ylabel_formatter: Callable = None,
         alias_xdata: np.ndarray = None,
-        anchor: str = "center left"
+        anchor: str = "center left",
     ):
         """
         Parameters:
@@ -761,7 +786,14 @@ class DataMarker(MarkerArtist):
             # turn off ylabel on data markers if yline is present. The axes label will be used as the data label.
             self.data_labels = [
                 LineLabel(
-                    axes, ln, datadot, ylabel, yline, ylabel_formatter, alias_xdata, anchor=anchor
+                    axes,
+                    ln,
+                    datadot,
+                    ylabel,
+                    yline,
+                    ylabel_formatter,
+                    alias_xdata,
+                    anchor=anchor,
                 )
                 for ln in lines
             ]
@@ -971,7 +1003,7 @@ class MeshMarker(MarkerArtist):
         xlabel_formatter: Callable = None,
         ylabel_formatter: Callable = None,
         zlabel_formatter: Callable = None,
-        anchor: str = None
+        anchor: str = None,
     ):
         """
         Parameters:
@@ -1000,7 +1032,9 @@ class MeshMarker(MarkerArtist):
             )
 
         # label for the z data
-        self.data_label = MeshLabel(axes, quadmesh, zlabel, zlabel_formatter, anchor=anchor)
+        self.data_label = MeshLabel(
+            axes, quadmesh, zlabel, zlabel_formatter, anchor=anchor
+        )
 
         # build list of all artists in the marker
         # line and dot artists first
