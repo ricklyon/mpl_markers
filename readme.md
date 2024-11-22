@@ -69,6 +69,24 @@ mplm.mesh_marker(x=0.75, y=0)
 ```
 ![example3](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example3.gif)
 
+### Scatter Plot Marker
+
+Markers attached to scatter plots can be added with `scatter_marker`.
+
+```python
+data_x = np.random.normal(-1, 1, 100)
+data_y = np.random.normal(-1, 1, 100)
+
+fig, ax = plt.subplots(1, 1)
+s = ax.scatter(data_x, data_y, color="b")
+
+# place the marker on the point closest to x=0, y=0.5.
+# if there is only one scatter plot on the axes, the collection argument can be dropped.
+mplm.scatter_marker(0, 0.5, collection=s, yformatter=lambda x, y, pos: f"x={x:.2f}\ny={y:.2f}")
+```
+![example5](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example5.gif)
+
+
 ## Styling
 The marker style is controlled by the `mpl_markers/style/default.json` file:
 
@@ -105,6 +123,16 @@ The marker style is controlled by the `mpl_markers/style/default.json` file:
             "linewidth": 1.5
         }
     },
+    "zlabel": {
+        "fontsize": 8,
+        "bbox": {
+            "boxstyle": "square",
+            "facecolor": "white",
+            "edgecolor": "black",
+            "alpha": 1,
+            "linewidth": 1.5
+        }
+    },
     "datadot": {
         "markersize": 10,
         "marker": "."
@@ -114,6 +142,12 @@ The marker style is controlled by the `mpl_markers/style/default.json` file:
         "marker": ".",
         "markerfacecolor":"white", 
         "markeredgecolor":"k"
+    },
+    "scatterdot": {
+        "markersize": 10,
+        "marker": ".",
+        "markeredgewidth": 1,
+        "markeredgecolor": "white"
     }
 }
 

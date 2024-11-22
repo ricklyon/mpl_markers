@@ -41,7 +41,9 @@ class TestLineMarker(unittest.TestCase):
         data_y = data_x ** 2
 
         s = ax.scatter(data_x, data_y)
-        mplm.scatter_marker(4, 15, collection=s, axes=ax, datadot=dict(color="pink", marker="^"))
+        mplm.scatter_marker(
+            4, 15, collection=s, axes=ax, scatterdot=dict(color="pink", markeredgewidth=0, markersize=15)
+        )
 
         if SHOW_INTERACTIVE:
             plt.show()

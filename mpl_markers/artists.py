@@ -1081,8 +1081,12 @@ class ScatterMarker(MarkerArtist):
         self,
         axes: Axes,
         collection: PathCollection,
-        ylabel: dict = dict(),
-        datadot: dict = None,
+        xlabel: dict = None,
+        ylabel: dict = None,
+        scatterdot: dict = None,
+        xline: dict = None,
+        yline: dict = None,
+        xlabel_formatter: Callable = None,
         ylabel_formatter: Callable = None,
         anchor: str = "center left",
     ):
@@ -1097,33 +1101,50 @@ class ScatterMarker(MarkerArtist):
         self.axes = axes
         self._anchor = anchor
         self._idx = 0
+        self.xlabel_formatter = ylabel_formatter
         self.ylabel_formatter = ylabel_formatter
-
-        # match the ylabel color to the scatter collection color
-        ylabel = dcopy(ylabel)
-        ylabel["bbox"]["edgecolor"] = collection.get_facecolor()[0]
+        self.scatterdot = None
+        self.xlabel = None
+        self.ylabel = None
+        self.xline = None
+        self.yline = None
 
         artists = []
 
-        # initalize marker dot at data point
-        if datadot:
-            # default color for the dot is same as the scatter plot
-            if "color" not in datadot.keys():
-                datadot["color"] = collection.get_facecolor()
-
-            self.datadot = MarkerLine(
-                axes=axes, **datadot
+        # create xline object
+        if xline:
+            self.xline = AxisLabel(
+                axes, xlabel, False, xline, False, False, xlabel_formatter, None
             )
-            artists += [self.datadot]
-        else:
-            self.datadot = None
+            artists += self.xline._artists
 
-        self.ylabel = MarkerLabel(
-            axes=axes, transform=None, verticalalignment="bottom", **ylabel
-        )
+        # data labels for each line
+        if yline:
+            self.yline = AxisLabel(
+                axes, False, ylabel, False, yline, False, None, ylabel_formatter
+            )
+            artists += self.yline._artists
 
-        # build list of all artists in the marker
-        artists += [self.ylabel]
+        # initalize marker dot at data point
+        if scatterdot:
+            # default color for the dot is same as the scatter plot
+            if "color" not in scatterdot.keys():
+                scatterdot["color"] = collection.get_facecolor()
+
+            self.scatterdot = MarkerLine(
+                axes=axes, **scatterdot
+            )
+            artists += [self.scatterdot]
+
+        if ylabel and not yline:
+            # match the ylabel color to the scatter collection color
+            ylabel = dcopy(ylabel)
+            ylabel["bbox"]["edgecolor"] = collection.get_facecolor()[0]
+            self.ylabel = MarkerLabel(
+                axes=axes, transform=None, verticalalignment="bottom", **ylabel
+            )
+            artists += [self.ylabel]
+
 
         self.set_position(0, 0)
 
@@ -1171,28 +1192,28 @@ class ScatterMarker(MarkerArtist):
         # the line may belong to another twinx/y axes and have different scaling.
         xl, yl = utils.data2display(self.axes, (self._xd, self._yd))
 
-        if self.ylabel_formatter is not None:
-            txt = self.ylabel_formatter(self._xd, self._yd)
 
-        else:
-            xtxt = utils.label_formatter(
-                self.axes, self._xd, self._yd, self._idx, mode="x", precision="{:.2f}"
-            )
+        if self.ylabel:
             ytxt = utils.label_formatter(
-                self.axes, self._xd, self._yd, self._idx, mode="y", precision="{:.2f}"
+                self.axes, self._xd, self._yd, self._idx, mode="y", custom=self.ylabel_formatter
             )
-            txt = f"x={xtxt}\ny={ytxt}"
 
-        self.ylabel.set_position(
-            (xl, yl),
-            txt,
-            anchor=self._anchor,
-            disp=True,
-            offset=(label_xpad, label_ypad),
-        )
+            self.ylabel.set_position(
+                (xl, yl),
+                ytxt,
+                anchor=self._anchor,
+                disp=True,
+                offset=(label_xpad, label_ypad),
+            )
 
-        if self.datadot:
-            self.datadot.set_data([self._xd], [self._yd])
+        if self.scatterdot:
+            self.scatterdot.set_data([self._xd], [self._yd])
+
+        if self.xline:
+            self.xline.set_position(x=self._xd)
+
+        if self.yline:
+            self.yline.set_position(y=self._yd)
 
     def get_data_points(self):
         return self._xd, self._yd

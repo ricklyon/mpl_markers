@@ -8,12 +8,11 @@ data_x = np.random.normal(-1, 1, 100)
 data_y = np.random.normal(-1, 1, 100)
 
 fig, ax = plt.subplots(1, 1)
-s = ax.scatter(data_x, data_y)
+s = ax.scatter(data_x, data_y, color="b")
 
 # place the marker on the point closest to x=0, y=0.5
 # the collections argument is optional, if not provided the marker is placed on the first
 # collection found on the axes
-mplm.scatter_marker(0, 0.5, collection=s, axes=ax, datadot=dict(color="pink"))
-
+mplm.scatter_marker(0, 0.5, collection=s, axes=ax, yformatter=lambda x, y, pos: f"x={x:.2f}\ny={y:.2f}")
 
 plt.show()

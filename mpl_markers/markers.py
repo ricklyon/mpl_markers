@@ -344,14 +344,19 @@ def axis_marker(
 
     return m
 
+
 def scatter_marker(
     x: float = None,
     y: float = None,
     collection: PathCollection = None,
     axes: plt.Axes = None,
     call_handler: bool = False,
-    datadot: Union[dict, bool] = True,
-    ylabel: dict = dict(),
+    xline: Union[dict, bool] = False,
+    yline: Union[dict, bool] = False,
+    scatterdot: Union[dict, bool] = True,
+    xlabel: Union[dict, bool] = False,
+    ylabel: Union[dict, bool] = True,
+    xformatter: Callable = None,
     yformatter: Callable = None,
     anchor: str = "center left",
 ) -> artists.DataMarker:
@@ -371,10 +376,23 @@ def scatter_marker(
         Axes object to add markers to. Defaults to plt.gca()
     call_handler: bool (optional)
         if True, calls the marker handler attached to the axes, if it exists. Defaults to False.
-    datadot: bool OR dictionary = True
+    xline: bool OR dictionary = True
+        If True, shows a vertical line at the x value of the marker. If dictionary, parameters are passed
+        into Line2D.
+    yline: bool OR dictionary = False
+        If True, shows a horizontal line at the y value of the marker. If dictionary, parameters are passed
+        into Line2D.
+    scatterdot: bool OR dictionary = True
         If True, shows a dot at the data point of the marker. If dictionary, parameters are passed into Line2D
-    ylabel: dictionary = True
-        parameters are passed into axes.text()
+    xlabel: bool OR dictionary = False
+        If True, shows a text box of the x value of the marker at the bottom of the axes. If dictionary, parameters are passed
+        into axes.text()
+    ylabel: bool OR dictionary = True
+        If True, shows a text box of the y value of the marker at the data point location. If dictionary, parameters are passed
+        into axes.text()
+    xformatter: Callable = None
+        function that returns a string to be placed in the x-axis label given a x data coordinate
+            def xformatter(x: float, idx:int) -> str
     yformatter: Callable = None
         function that returns a string to be placed in the data label given a x and y data coordinate
             def yformatter(x: float, y:float, idx:int) -> str
@@ -401,11 +419,17 @@ def scatter_marker(
         else:
             collection = c_list[0]
 
-    properties = utils.compile_properties(axes, ["ylabel", "datadot"], [ylabel, datadot])
+    properties = utils.compile_properties(
+        axes, 
+        ["xline", "yline", "xlabel", "ylabel", "scatterdot"],
+        [xline, yline, xlabel, ylabel, scatterdot],
+    )
 
     # get the x and y label formatters from the axes if not provided
     if yformatter is None and axes._marker_yformatter:
         yformatter = axes._marker_yformatter
+    if xformatter is None and axes._marker_xformatter:
+        xformatter = axes._marker_xformatter
 
     # create marker on the existing data lines
     m = artists.ScatterMarker(
