@@ -4,18 +4,21 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import ticker
 from matplotlib.lines import Line2D
-from matplotlib.collections import QuadMesh
+from matplotlib.collections import QuadMesh, PathCollection
 import itertools
 import json
 from pathlib import Path
+from copy import deepcopy
 
-from . import artists, interactive
+from . import artists, interactive, utils
 
 __all__ = (
     "line_marker",
     "mesh_marker",
     "axis_marker",
+    "scatter_marker",
     "set_style",
+    "set_style_json",
     "clear",
     "remove",
     "disable_lines",
@@ -26,7 +29,7 @@ __all__ = (
     "init_axes",
 )
 
-_global_style_file = Path(__file__).parent / "style/default.json"
+_global_style = dict()
 
 
 def line_marker(
@@ -105,20 +108,11 @@ def line_marker(
         return None
 
     # compile artist properties from user provided values or the defaults
-    properties = {}
-    for k, prop in zip(
+    properties = utils.compile_properties(
+        axes,
         ["xline", "yline", "xlabel", "ylabel", "datadot"],
         [xline, yline, xlabel, ylabel, datadot],
-    ):
-        # pull default style if True was passed into this property
-        if prop is True:
-            properties[k] = axes._marker_style[k]
-        # override the default with user provided dictionaries
-        elif isinstance(prop, dict):
-            properties[k] = axes._marker_style[k]
-            # allow partial dictionaries
-            for n, v in prop.items():
-                properties[k][n] = v
+    )
 
     # get the x and y label formatters from the axes if not provided
     if xformatter is None and axes._marker_xformatter:
@@ -222,20 +216,11 @@ def mesh_marker(
         return None
 
     # pull properties from default styles
-    properties = {}
-    for k, prop in zip(
+    properties = utils.compile_properties(
+        axes,
         ["xline", "yline", "xlabel", "ylabel", "zlabel"],
         [xline, yline, xlabel, ylabel, zlabel],
-    ):
-        # pull default style if True was passed into this property
-        if prop is True:
-            properties[k] = axes._marker_style[k]
-        # override the default with user provided dictionaries
-        elif isinstance(prop, dict):
-            properties[k] = axes._marker_style[k]
-            # allow partial dictionaries
-            for n, v in prop.items():
-                properties[k][n] = v
+    )
 
     # get the x and y label formatters from the axes if not provided
     if xformatter is None and axes._marker_xformatter:
@@ -334,17 +319,11 @@ def axis_marker(
         xlabel = False if x is None else xlabel
 
     # pull properties from default styles
-    properties = {}
-    for k, prop in zip(
+    properties = utils.compile_properties(
+        axes,
         ["xline", "yline", "xlabel", "ylabel", "axisdot"],
         [xline, yline, xlabel, ylabel, axisdot],
-    ):
-        if prop is True or prop is None:
-            properties[k] = axes._marker_style[k]
-        elif isinstance(prop, dict):
-            properties[k] = axes._marker_style[k]
-            for n, v in prop.items():
-                properties[k][n] = v
+    )
 
     # get the x and y label formatters from the axes if not provided
     if xformatter is None and axes._marker_xformatter:
@@ -368,7 +347,116 @@ def axis_marker(
     return m
 
 
-def set_style(path: Path):
+def scatter_marker(
+    x: float = None,
+    y: float = None,
+    collection: PathCollection = None,
+    axes: plt.Axes = None,
+    call_handler: bool = False,
+    xline: Union[dict, bool] = False,
+    yline: Union[dict, bool] = False,
+    scatterdot: Union[dict, bool] = True,
+    xlabel: Union[dict, bool] = False,
+    ylabel: Union[dict, bool] = True,
+    xformatter: Callable = None,
+    yformatter: Callable = None,
+    anchor: str = "center left",
+) -> artists.DataMarker:
+    """
+    Adds a marker to cartesian scatter plot.
+
+    Parameters
+    ----------
+    x: float
+        x-axis data value of marker
+    y: float (optional)
+        y-axis data value
+    collection: list (optional)
+        PathCollection to attach markers to (returned from plt.scatter()).
+        If not provided, uses the first collection found on the axes.
+    axes: plt.Axes (optional)
+        Axes object to add markers to. Defaults to plt.gca()
+    call_handler: bool (optional)
+        if True, calls the marker handler attached to the axes, if it exists. Defaults to False.
+    xline: bool OR dictionary = True
+        If True, shows a vertical line at the x value of the marker. If dictionary, parameters are passed
+        into Line2D.
+    yline: bool OR dictionary = False
+        If True, shows a horizontal line at the y value of the marker. If dictionary, parameters are passed
+        into Line2D.
+    scatterdot: bool OR dictionary = True
+        If True, shows a dot at the data point of the marker. If dictionary, parameters are passed into Line2D
+    xlabel: bool OR dictionary = False
+        If True, shows a text box of the x value of the marker at the bottom of the axes. If dictionary, parameters are passed
+        into axes.text()
+    ylabel: bool OR dictionary = True
+        If True, shows a text box of the y value of the marker at the data point location. If dictionary, parameters are passed
+        into axes.text()
+    xformatter: Callable = None
+        function that returns a string to be placed in the x-axis label given a x data coordinate
+            def xformatter(x: float, idx:int) -> str
+    yformatter: Callable = None
+        function that returns a string to be placed in the data label given a x and y data coordinate
+            def yformatter(x: float, y:float, idx:int) -> str
+    anchor: str = None
+        anchor point for the y-axis data labels. One of "upper/lower/center left/right/center". Default is
+        "center left"
+    Returns:
+    --------
+    Marker object
+    """
+
+    # get current axes if user did not provide one
+    if axes is None:
+        axes = plt.gca()
+
+    axes = init_axes(axes)
+
+    # if collection is not provided, search for the first PathCollection found on the axes
+    if collection is None:
+        c_list = [c for c in axes.collections if isinstance(c, PathCollection)]
+
+        if not len(c_list):
+            return None
+        else:
+            collection = c_list[0]
+
+    properties = utils.compile_properties(
+        axes,
+        ["xline", "yline", "xlabel", "ylabel", "scatterdot"],
+        [xline, yline, xlabel, ylabel, scatterdot],
+    )
+
+    # get the x and y label formatters from the axes if not provided
+    if yformatter is None and axes._marker_yformatter:
+        yformatter = axes._marker_yformatter
+    if xformatter is None and axes._marker_xformatter:
+        xformatter = axes._marker_xformatter
+
+    # create marker on the existing data lines
+    m = artists.ScatterMarker(
+        axes,
+        collection,
+        ylabel_formatter=yformatter,
+        anchor=anchor,
+        **properties,
+    )
+
+    m.set_position(x, y)
+
+    # create new marker and append to the axes marker list
+    axes.markers.append(m)
+    axes.marker_active = m
+
+    # call the axes handler if it exists
+    if axes._marker_handler is not None and call_handler:
+        func, params = axes._marker_handler
+        func(*axes.marker_active.get_data_points(), **params)
+
+    return m
+
+
+def set_style_json(path: Path):
     """
     Sets the style globally on all future markers.
 
@@ -377,8 +465,33 @@ def set_style(path: Path):
     path: Path
         path to a .json file that matches the structure of "style/default.json"
     """
-    global _global_style_file
-    _global_style_file = Path(path)
+
+    with open(path) as f:
+        set_style(**json.load(f))
+
+
+def set_style(**properties):
+    """
+    Sets the style globally on all future markers.
+
+    Parameters:
+    -----------
+    ** properties
+        any or all key value pairs found in "style/default.json"
+    """
+    global _global_style
+
+    # start with the default style
+    default_style_path = Path(__file__).parent / "style/default.json"
+    with open(default_style_path) as f:
+        _global_style = json.load(f)
+
+    # overwrite the defaults with the provided properties
+    for k in _global_style.keys():
+        # each property is a dictionary, leave the default prop intact and only overwrite the provided keys
+        if k in properties.keys():
+            for pk in properties[k].keys():
+                _global_style[k][pk] = deepcopy(properties[k][pk])
 
 
 def clear(axes: plt.Axes = None):
@@ -731,43 +844,18 @@ def init_canvas(fig: plt.Figure, event=None):
 
 def init_axes(
     axes: plt.Axes,
-    style_path: Path = None,
     xformatter: Callable = None,
     yformatter: Callable = None,
-    xline: dict = None,
-    yline: dict = None,
-    datadot: dict = None,
-    axisdot: dict = None,
-    xlabel: dict = None,
-    ylabel: dict = None,
     handler: Callable[[np.ndarray, np.ndarray, Optional[dict]], None] = None,
+    **properties,
 ) -> plt.Axes:
     """
-    Compiles a list of axes lines that will accept marker y-labels and validates the x-axis data of each.
+    Initializes the axes to accept marker objects
 
     Parameters
     ----------
     axes: mpl.Axes
         matplotlib axes object
-    style_path: Path
-        path to a .json file that matches the structure of "style/default.json". Style is
-        applied to markers on this axes only.
-    xline: bool OR dictionary = True
-        shows a vertical line at the x value of the marker. If dictionary, parameters are passed
-        into Line2D.
-    yline: bool OR dictionary = False
-        shows a horizontal line at the y value of the marker. If dictionary, parameters are passed
-        into Line2D.
-    datadot: bool OR dictionary = True
-        shows a dot at the data point of the marker. If dictionary, parameters are passed into Line2D
-    axisdot: bool OR dictionary = True
-        shows a dot at the location of axis markers. If dictionary, parameters are passed into Line2D
-    xlabel: bool OR dictionary = False
-        shows a text box of the x value of the marker at the bottom of the axes. If dictionary, parameters are passed
-        into axes.text()
-    ylabel: bool OR dictionary = True
-        shows a text box of the y value of the marker at the data point location. If dictionary, parameters are passed
-        into axes.text()
     yformatter: Callable = None
         function that returns a string to be placed in the data label given a x and y data coordinate
             def yformatter(x: float, y:float, idx:int) -> str
@@ -780,25 +868,26 @@ def init_axes(
 
         The xd and yd parameter are arrays of x-axis/y-axis data values of each line on the active marker.
         kwargs are the same as the optional kwargs passed into add_handler.
+    ** properties
+        any or all key value pairs found in style/default.json
+
     """
     axes._marker_axes = axes
     axes._secondary_axes = []
 
-    # load the default style sheet
-    if not hasattr(axes, "_marker_style"):
-        # read default style
-        style_path = _global_style_file if style_path is None else style_path
-        with open(style_path) as f:
-            axes._marker_style = json.load(f)
-
     # update the marker styles with the user provided properties
-    for k, prop in zip(
-        ["xline", "yline", "xlabel", "ylabel", "datadot", "axisdot"],
-        [xline, yline, xlabel, ylabel, datadot, axisdot],
-    ):
-        if prop:
-            for n, v in prop.items():
-                axes._marker_style[k][n] = v
+    if not len(_global_style):
+        set_style()
+
+    if not hasattr(axes, "_marker_style"):
+        axes._marker_style = deepcopy(_global_style)
+
+    # overwrite the defaults with the provided properties
+    for k in _global_style.keys():
+        # each property is a dictionary, leave the default prop intact and only overwrite the provided keys
+        if k in properties.keys():
+            for pk in properties[k].keys():
+                axes._marker_style[k][pk] = deepcopy(properties[k][pk])
 
     if not hasattr(axes, "_marker_ignorelines"):
         axes._marker_ignorelines = []
@@ -838,6 +927,7 @@ def init_axes(
 
     # do not modify the axes if called on a secondary axes, initialize primary axes instead
     axes = axes._marker_axes
+
     # compile list of all lines in this axes and any axes that share the same canvas
     lines_unfiltered = list(axes.lines) + list(
         itertools.chain.from_iterable([ax.lines for ax in axes._secondary_axes])

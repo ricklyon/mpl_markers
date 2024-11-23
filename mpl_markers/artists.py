@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.lines import Line2D
-from matplotlib.collections import QuadMesh
+from matplotlib.collections import QuadMesh, PathCollection
 from copy import deepcopy as dcopy
 from typing import Tuple, Union, Callable
 import itertools
@@ -279,8 +279,8 @@ class LineLabel(MarkerArtist):
         if yline:
             self.yline = MarkerLine(axes=data_line.axes, **yline)
 
-        self._xdata = np.array(self.data_line.get_xdata())
-        self._ydata = np.array(self.data_line.get_ydata())
+        self._xdata = self.data_line.get_xdata()
+        self._ydata = self.data_line.get_ydata()
 
         if axes.name == "polar":
             # wrap xdata between -180 and 180 if axes is polar
@@ -314,8 +314,8 @@ class LineLabel(MarkerArtist):
 
     def set_position_by_index(self, idx):
 
-        self._xdata = np.array(self.data_line.get_xdata())
-        self._ydata = np.array(self.data_line.get_ydata())
+        self._xdata = self.data_line.get_xdata()
+        self._ydata = self.data_line.get_ydata()
 
         if idx >= len(self._xdata):
             idx = len(self._xdata) - 1
@@ -1064,6 +1064,155 @@ class MeshMarker(MarkerArtist):
         if self.axis_label:
             # find the label with the closest x data point to the target position and place the x-axis marker there'
             self.axis_label.set_position(self.data_label._xd, self.data_label._yd)
+
+    def get_data_points(self):
+        return self._xd, self._yd
+
+    def update_positions(self):
+        self.set_position(*self._position_args)
+
+
+class ScatterMarker(MarkerArtist):
+    """
+    Places a marker on a scatter plot.
+    """
+
+    def __init__(
+        self,
+        axes: Axes,
+        collection: PathCollection,
+        xlabel: dict = None,
+        ylabel: dict = None,
+        scatterdot: dict = None,
+        xline: dict = None,
+        yline: dict = None,
+        xlabel_formatter: Callable = None,
+        ylabel_formatter: Callable = None,
+        anchor: str = "center left",
+    ):
+        """
+        Parameters:
+        -----------
+
+
+        """
+        self.collection = collection
+        artists = []
+        self.axes = axes
+        self._anchor = anchor
+        self._idx = 0
+        self.xlabel_formatter = ylabel_formatter
+        self.ylabel_formatter = ylabel_formatter
+        self.scatterdot = None
+        self.xlabel = None
+        self.ylabel = None
+        self.xline = None
+        self.yline = None
+
+        artists = []
+
+        # create xline object
+        if xline:
+            self.xline = AxisLabel(
+                axes, xlabel, False, xline, False, False, xlabel_formatter, None
+            )
+            artists += self.xline._artists
+
+        # data labels for each line
+        if yline:
+            self.yline = AxisLabel(
+                axes, False, ylabel, False, yline, False, None, ylabel_formatter
+            )
+            artists += self.yline._artists
+
+        # initalize marker dot at data point
+        if scatterdot:
+            # default color for the dot is same as the scatter plot
+            if "color" not in scatterdot.keys():
+                scatterdot["color"] = collection.get_facecolor()
+
+            self.scatterdot = MarkerLine(axes=axes, **scatterdot)
+            artists += [self.scatterdot]
+
+        if ylabel and not yline:
+            # match the ylabel color to the scatter collection color
+            ylabel = dcopy(ylabel)
+            ylabel["bbox"]["edgecolor"] = collection.get_facecolor()[0]
+            self.ylabel = MarkerLabel(
+                axes=axes, transform=None, verticalalignment="bottom", **ylabel
+            )
+            artists += [self.ylabel]
+
+        self.set_position(0, 0)
+
+        super().__init__(axes, artists)
+
+    def set_position(self, x: float, y: float, disp: bool = False):
+        """
+        Parameters:
+        -----------
+        """
+
+        # save the arguments to update the marker position when the axes bbox changes later
+        self._position_args = (x, y, disp)
+
+        if disp:
+            x, y = utils.display2data(self.axes, (x, y))
+
+        xdata, ydata = self.collection.get_offsets().data.T
+
+        dist = np.sqrt((x - xdata) ** 2 + np.abs(y - ydata) ** 2)
+        # set position to the data point with the smallest error
+        self.set_position_by_index(np.nanargmin(dist))
+
+    def set_position_by_index(self, idx):
+
+        xdata, ydata = self.collection.get_offsets().data.T
+
+        if idx >= len(xdata):
+            idx = len(xdata) - 1
+
+        if idx < 0:
+            idx = 0
+
+        self._idx = idx
+        self._xd = np.real(xdata[idx])
+        self._yd = np.real(ydata[idx])
+
+        # pad values in display coordinates (pixels)
+        label_xpad = self.axes.figure.dpi / 10
+        label_ypad = self.axes.figure.dpi / 10
+
+        # get label position in display coordinates. Use the line axes instead of the class axes since
+        # the line may belong to another twinx/y axes and have different scaling.
+        xl, yl = utils.data2display(self.axes, (self._xd, self._yd))
+
+        if self.ylabel:
+            ytxt = utils.label_formatter(
+                self.axes,
+                self._xd,
+                self._yd,
+                self._idx,
+                mode="y",
+                custom=self.ylabel_formatter,
+            )
+
+            self.ylabel.set_position(
+                (xl, yl),
+                ytxt,
+                anchor=self._anchor,
+                disp=True,
+                offset=(label_xpad, label_ypad),
+            )
+
+        if self.scatterdot:
+            self.scatterdot.set_data([self._xd], [self._yd])
+
+        if self.xline:
+            self.xline.set_position(x=self._xd)
+
+        if self.yline:
+            self.yline.set_position(y=self._yd)
 
     def get_data_points(self):
         return self._xd, self._yd
