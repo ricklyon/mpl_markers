@@ -14,7 +14,7 @@ m1 = mplm.axis_marker(
     y=np.min(y1), yformatter="{:.2f}%", ylabel=dict(fontfamily="monospace")
 )
 
-# # create second marker that is referenced from the first marker m1
+# create second marker that is referenced from the first marker m1
 mplm.axis_marker(
     y=np.max(y1),
     ref_marker=m1,

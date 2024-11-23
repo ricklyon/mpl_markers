@@ -1166,7 +1166,7 @@ class ScatterMarker(MarkerArtist):
 
         xdata, ydata = self.collection.get_offsets().data.T
 
-        dist = np.abs(x - xdata) + np.abs(y - ydata)
+        dist = np.sqrt((x - xdata)**2 + np.abs(y - ydata)**2)
         # set position to the data point with the smallest error
         self.set_position_by_index(np.nanargmin(dist))
 

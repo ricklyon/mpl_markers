@@ -8,6 +8,7 @@ from matplotlib.collections import QuadMesh, PathCollection
 import itertools
 import json
 from pathlib import Path
+from copy import deepcopy
 
 from . import artists, interactive, utils
 
@@ -17,6 +18,7 @@ __all__ = (
     "axis_marker",
     "scatter_marker",
     "set_style",
+    "set_style_json",
     "clear",
     "remove",
     "disable_lines",
@@ -27,7 +29,7 @@ __all__ = (
     "init_axes",
 )
 
-_global_style_file = Path(__file__).parent / "style/default.json"
+_global_style = dict()
 
 
 def line_marker(
@@ -454,7 +456,7 @@ def scatter_marker(
     return m
 
 
-def set_style(path: Path):
+def set_style_json(path: Path):
     """
     Sets the style globally on all future markers.
 
@@ -463,9 +465,33 @@ def set_style(path: Path):
     path: Path
         path to a .json file that matches the structure of "style/default.json"
     """
-    global _global_style_file
-    _global_style_file = Path(path)
 
+    with open(path) as f:
+        set_style(**json.load(f))
+
+
+def set_style(**properties):
+    """
+    Sets the style globally on all future markers.
+
+    Parameters:
+    -----------
+    ** properties
+        any or all key value pairs found in "style/default.json"
+    """
+    global _global_style
+
+    # start with the default style
+    default_style_path = Path(__file__).parent / "style/default.json"
+    with open(default_style_path) as f:
+        _global_style = json.load(f)
+
+    # overwrite the defaults with the provided properties
+    for k in _global_style.keys():
+        # each property is a dictionary, leave the default prop intact and only overwrite the provided keys
+        if k in properties.keys():
+            for pk in properties[k].keys():
+                _global_style[k][pk] = deepcopy(properties[k][pk])
 
 def clear(axes: plt.Axes = None):
     """
@@ -817,43 +843,18 @@ def init_canvas(fig: plt.Figure, event=None):
 
 def init_axes(
     axes: plt.Axes,
-    style_path: Path = None,
     xformatter: Callable = None,
     yformatter: Callable = None,
-    xline: dict = None,
-    yline: dict = None,
-    datadot: dict = None,
-    axisdot: dict = None,
-    xlabel: dict = None,
-    ylabel: dict = None,
     handler: Callable[[np.ndarray, np.ndarray, Optional[dict]], None] = None,
+    ** properties
 ) -> plt.Axes:
     """
-    Compiles a list of axes lines that will accept marker y-labels and validates the x-axis data of each.
+    Initializes the axes to accept marker objects
 
     Parameters
     ----------
     axes: mpl.Axes
         matplotlib axes object
-    style_path: Path
-        path to a .json file that matches the structure of "style/default.json". Style is
-        applied to markers on this axes only.
-    xline: bool OR dictionary = True
-        shows a vertical line at the x value of the marker. If dictionary, parameters are passed
-        into Line2D.
-    yline: bool OR dictionary = False
-        shows a horizontal line at the y value of the marker. If dictionary, parameters are passed
-        into Line2D.
-    datadot: bool OR dictionary = True
-        shows a dot at the data point of the marker. If dictionary, parameters are passed into Line2D
-    axisdot: bool OR dictionary = True
-        shows a dot at the location of axis markers. If dictionary, parameters are passed into Line2D
-    xlabel: bool OR dictionary = False
-        shows a text box of the x value of the marker at the bottom of the axes. If dictionary, parameters are passed
-        into axes.text()
-    ylabel: bool OR dictionary = True
-        shows a text box of the y value of the marker at the data point location. If dictionary, parameters are passed
-        into axes.text()
     yformatter: Callable = None
         function that returns a string to be placed in the data label given a x and y data coordinate
             def yformatter(x: float, y:float, idx:int) -> str
@@ -866,25 +867,26 @@ def init_axes(
 
         The xd and yd parameter are arrays of x-axis/y-axis data values of each line on the active marker.
         kwargs are the same as the optional kwargs passed into add_handler.
+    ** properties
+        any or all key value pairs found in style/default.json
+
     """
     axes._marker_axes = axes
     axes._secondary_axes = []
 
-    # load the default style sheet
-    if not hasattr(axes, "_marker_style"):
-        # read default style
-        style_path = _global_style_file if style_path is None else style_path
-        with open(style_path) as f:
-            axes._marker_style = json.load(f)
-
     # update the marker styles with the user provided properties
-    for k, prop in zip(
-        ["xline", "yline", "xlabel", "ylabel", "datadot", "axisdot"],
-        [xline, yline, xlabel, ylabel, datadot, axisdot],
-    ):
-        if prop:
-            for n, v in prop.items():
-                axes._marker_style[k][n] = v
+    if not len(_global_style):
+        set_style()
+
+    if not hasattr(axes, "_marker_style"):
+        axes._marker_style = deepcopy(_global_style)
+    
+    # overwrite the defaults with the provided properties
+    for k in _global_style.keys():
+        # each property is a dictionary, leave the default prop intact and only overwrite the provided keys
+        if k in properties.keys():
+            for pk in properties[k].keys():
+                axes._marker_style[k][pk] = deepcopy(properties[k][pk])
 
     if not hasattr(axes, "_marker_ignorelines"):
         axes._marker_ignorelines = []
@@ -924,6 +926,7 @@ def init_axes(
 
     # do not modify the axes if called on a secondary axes, initialize primary axes instead
     axes = axes._marker_axes
+
     # compile list of all lines in this axes and any axes that share the same canvas
     lines_unfiltered = list(axes.lines) + list(
         itertools.chain.from_iterable([ax.lines for ax in axes._secondary_axes])

@@ -2,6 +2,7 @@ from matplotlib.axes import Axes
 from matplotlib import ticker
 from typing import Tuple, Union, Callable, List
 import numpy as np
+from copy import deepcopy
 
 
 def data2display(axes, point):
@@ -100,13 +101,13 @@ def compile_properties(axes, keys: List[str], props: List[dict]):
     for k, p in zip(keys, props):
         # pull default style if True was passed into this property
         if p is True or p is None:
-            properties[k] = axes._marker_style[k]
+            properties[k] = deepcopy(axes._marker_style[k])
         # override the default with user provided dictionaries
         elif isinstance(p, dict):
-            properties[k] = axes._marker_style[k]
+            properties[k] = deepcopy(axes._marker_style[k])
             # allow partial dictionaries
             for n, v in p.items():
-                properties[k][n] = v
+                properties[k][n] = deepcopy(v)
         # don't add to properties if False was passed in for this property
 
     return properties
