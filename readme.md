@@ -82,7 +82,9 @@ s = ax.scatter(data_x, data_y, color="b")
 
 # place the marker on the point closest to x=0, y=0.5.
 # if there is only one scatter plot on the axes, the collection argument can be dropped.
-mplm.scatter_marker(0, 0.5, collection=s, yformatter=lambda x, y, pos: f"x={x:.2f}\ny={y:.2f}")
+mplm.scatter_marker(
+    0, 0.5, collection=s, yformatter=lambda x, y, pos: f"x={x:.2f}\ny={y:.2f}", anchor="upper left"
+)
 ```
 ![example5](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example5.gif)
 
