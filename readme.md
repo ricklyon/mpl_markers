@@ -84,7 +84,7 @@ s = ax.scatter(data_x, data_y, color="b")
 # if there is only one scatter plot on the axes, the collection argument can be dropped.
 mplm.scatter_marker(0, 0.5, collection=s, yformatter=lambda x, y, pos: f"x={x:.2f}\ny={y:.2f}")
 ```
-![example5](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example5.gif)
+![example5](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example5.png)
 
 
 ## Styling
@@ -175,7 +175,7 @@ mplm.line_marker(
 Custom .json files are supported with the `mplm.set_style_json` method. This will set the style on all future markers and must have the same keys as the default.json file:
 
 ```python
-mplm.set_style_json("set_style_json.json")
+mplm.set_style_json("user_style.json")
 ```
 
 ## License
