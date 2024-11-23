@@ -1131,9 +1131,7 @@ class ScatterMarker(MarkerArtist):
             if "color" not in scatterdot.keys():
                 scatterdot["color"] = collection.get_facecolor()
 
-            self.scatterdot = MarkerLine(
-                axes=axes, **scatterdot
-            )
+            self.scatterdot = MarkerLine(axes=axes, **scatterdot)
             artists += [self.scatterdot]
 
         if ylabel and not yline:
@@ -1145,14 +1143,11 @@ class ScatterMarker(MarkerArtist):
             )
             artists += [self.ylabel]
 
-
         self.set_position(0, 0)
 
         super().__init__(axes, artists)
 
-    def set_position(
-        self, x: float, y: float, disp: bool = False
-    ):
+    def set_position(self, x: float, y: float, disp: bool = False):
         """
         Parameters:
         -----------
@@ -1166,7 +1161,7 @@ class ScatterMarker(MarkerArtist):
 
         xdata, ydata = self.collection.get_offsets().data.T
 
-        dist = np.sqrt((x - xdata)**2 + np.abs(y - ydata)**2)
+        dist = np.sqrt((x - xdata) ** 2 + np.abs(y - ydata) ** 2)
         # set position to the data point with the smallest error
         self.set_position_by_index(np.nanargmin(dist))
 
@@ -1192,10 +1187,14 @@ class ScatterMarker(MarkerArtist):
         # the line may belong to another twinx/y axes and have different scaling.
         xl, yl = utils.data2display(self.axes, (self._xd, self._yd))
 
-
         if self.ylabel:
             ytxt = utils.label_formatter(
-                self.axes, self._xd, self._yd, self._idx, mode="y", custom=self.ylabel_formatter
+                self.axes,
+                self._xd,
+                self._yd,
+                self._idx,
+                mode="y",
+                custom=self.ylabel_formatter,
             )
 
             self.ylabel.set_position(

@@ -6,9 +6,7 @@ from pathlib import Path
 from parameterized import parameterized
 from test_variables import SHOW_INTERACTIVE
 
-FIG_NAMES = (
-    "test_simple_scatter.png",
-)
+FIG_NAMES = ("test_simple_scatter.png",)
 
 
 class TestLineMarker(unittest.TestCase):
@@ -38,11 +36,15 @@ class TestLineMarker(unittest.TestCase):
         ax.set_title("test_simple_scatter")
 
         data_x = np.arange(10)
-        data_y = data_x ** 2
+        data_y = data_x**2
 
         s = ax.scatter(data_x, data_y)
         mplm.scatter_marker(
-            4, 15, collection=s, axes=ax, scatterdot=dict(color="pink", markeredgewidth=0, markersize=15)
+            4,
+            15,
+            collection=s,
+            axes=ax,
+            scatterdot=dict(color="pink", markeredgewidth=0, markersize=15),
         )
 
         if SHOW_INTERACTIVE:

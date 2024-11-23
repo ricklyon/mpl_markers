@@ -16,12 +16,12 @@ mplm.set_style(ylabel=dict(fontsize=10))
 # the collections argument is optional, if not provided the marker is placed on the first
 # collection found on the axes
 mplm.scatter_marker(
-    0.5, 0.5, 
-    collection=s, 
-    axes=ax, 
+    0.5,
+    0.5,
+    collection=s,
+    axes=ax,
     yformatter=lambda x, y, pos: f"x={x:.2f}\ny={y:.2f}",
-    anchor="upper left"
+    anchor="upper left",
 )
 
 plt.show()
-

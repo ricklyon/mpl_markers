@@ -109,7 +109,7 @@ def line_marker(
 
     # compile artist properties from user provided values or the defaults
     properties = utils.compile_properties(
-        axes, 
+        axes,
         ["xline", "yline", "xlabel", "ylabel", "datadot"],
         [xline, yline, xlabel, ylabel, datadot],
     )
@@ -217,7 +217,7 @@ def mesh_marker(
 
     # pull properties from default styles
     properties = utils.compile_properties(
-        axes, 
+        axes,
         ["xline", "yline", "xlabel", "ylabel", "zlabel"],
         [xline, yline, xlabel, ylabel, zlabel],
     )
@@ -320,7 +320,7 @@ def axis_marker(
 
     # pull properties from default styles
     properties = utils.compile_properties(
-        axes, 
+        axes,
         ["xline", "yline", "xlabel", "ylabel", "axisdot"],
         [xline, yline, xlabel, ylabel, axisdot],
     )
@@ -372,7 +372,7 @@ def scatter_marker(
     y: float (optional)
         y-axis data value
     collection: list (optional)
-        PathCollection to attach markers to (returned from plt.scatter()). 
+        PathCollection to attach markers to (returned from plt.scatter()).
         If not provided, uses the first collection found on the axes.
     axes: plt.Axes (optional)
         Axes object to add markers to. Defaults to plt.gca()
@@ -422,7 +422,7 @@ def scatter_marker(
             collection = c_list[0]
 
     properties = utils.compile_properties(
-        axes, 
+        axes,
         ["xline", "yline", "xlabel", "ylabel", "scatterdot"],
         [xline, yline, xlabel, ylabel, scatterdot],
     )
@@ -492,6 +492,7 @@ def set_style(**properties):
         if k in properties.keys():
             for pk in properties[k].keys():
                 _global_style[k][pk] = deepcopy(properties[k][pk])
+
 
 def clear(axes: plt.Axes = None):
     """
@@ -846,7 +847,7 @@ def init_axes(
     xformatter: Callable = None,
     yformatter: Callable = None,
     handler: Callable[[np.ndarray, np.ndarray, Optional[dict]], None] = None,
-    ** properties
+    **properties,
 ) -> plt.Axes:
     """
     Initializes the axes to accept marker objects
@@ -880,7 +881,7 @@ def init_axes(
 
     if not hasattr(axes, "_marker_style"):
         axes._marker_style = deepcopy(_global_style)
-    
+
     # overwrite the defaults with the provided properties
     for k in _global_style.keys():
         # each property is a dictionary, leave the default prop intact and only overwrite the provided keys

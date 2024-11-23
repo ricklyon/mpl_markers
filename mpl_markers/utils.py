@@ -24,7 +24,7 @@ def label_formatter(
     idx: int = None,
     custom: Union[Callable, str] = None,
     mode: str = "x",
-    precision: int = "{:.3f}"
+    precision: int = "{:.3f}",
 ) -> str:
     """
     Returns a formatted string for the y-label marker at the data points xd, yd.
