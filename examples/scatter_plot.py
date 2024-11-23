@@ -7,7 +7,7 @@ plt.style.use("ggplot")
 data_x = np.random.normal(-1, 1, 100)
 data_y = np.random.normal(-1, 1, 100)
 
-fig, ax = plt.subplots(1, 1)
+fig, ax = plt.subplots(1, 1, figsize=(5, 4))
 s = ax.scatter(data_x, data_y, color="b")
 
 mplm.set_style(ylabel=dict(fontsize=10))
