@@ -84,7 +84,7 @@ s = ax.scatter(data_x, data_y, color="b")
 # if there is only one scatter plot on the axes, the collection argument can be dropped.
 mplm.scatter_marker(0, 0.5, collection=s, yformatter=lambda x, y, pos: f"x={x:.2f}\ny={y:.2f}")
 ```
-![example5](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example5.png)
+![example5](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example5.gif)
 
 
 ## Styling
