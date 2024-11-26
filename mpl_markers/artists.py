@@ -282,10 +282,6 @@ class LineLabel(MarkerArtist):
         self._xdata = self.data_line.get_xdata()
         self._ydata = self.data_line.get_ydata()
 
-        if axes.name == "polar":
-            # wrap xdata between -180 and 180 if axes is polar
-            self._xdata = (self._xdata + np.pi) % (2 * np.pi) - np.pi
-
         # validate alias data
         if np.any(self._alias_xdata) and self._alias_xdata.shape != self._xdata.shape:
             raise ValueError(
@@ -389,7 +385,7 @@ class LineLabel(MarkerArtist):
         elif (
             x is not None and y is not None
         ):  # placement mode 'xy' requires both arguments
-            dist = np.abs(x - self._xdata) + np.abs(y - self._ydata)
+            dist = np.sqrt((x - self._xdata)**2 + (y - self._ydata)**2)
         else:
             raise ValueError(
                 f"Insufficent positional arguments for marker with placement mode: {mode}"
@@ -1161,7 +1157,17 @@ class ScatterMarker(MarkerArtist):
 
         xdata, ydata = self.collection.get_offsets().data.T
 
-        dist = np.sqrt((x - xdata) ** 2 + np.abs(y - ydata) ** 2)
+        if x is not None and y is not None:
+            dist = np.sqrt((x - xdata)**2 + (y - ydata)**2)
+        elif x is not None:
+            dist = np.abs(x - xdata)
+        elif y is not None:
+            dist = np.abs(y - ydata)
+        else:
+            raise ValueError(
+                f"Insufficent positional arguments for marker."
+            )
+        
         # set position to the data point with the smallest error
         self.set_position_by_index(np.nanargmin(dist))
 
