@@ -184,7 +184,13 @@ def canvas_draw(figure: plt.Figure, renderer=None):
     if renderer is not None:
         figure.draw(renderer)
     else:
-        figure.canvas.draw()
+        # ideally we want the canvas to draw immediately while the events are disconnected,
+        # but some web-based backends fail to draw if this is called before plt.show(), in which case
+        # just issue a draw request. 
+        try:
+            figure.canvas.draw()
+        except Exception as e:
+            figure.canvas.draw_idle()
 
     figure._marker_handlers["draw_event"] = figure.canvas.mpl_connect(
         "draw_event", on_draw

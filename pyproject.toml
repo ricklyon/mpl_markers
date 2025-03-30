@@ -29,8 +29,21 @@ dev = [
     "bumpversion", 
     "parameterized", 
     "pyqt5", 
-    "ipykernel"
+    "ipykernel",
+    "ipympl"
 ]
+
+docs = [
+  'jupyter_sphinx',
+  'lxml',
+  'numpydoc',
+  'pydata-sphinx-theme==0.15.4',
+  'sphinx-book-theme==1.1.3',
+  'sphinx-design',
+  'sphinx-toolbox',
+  'sphinx',
+]
+
 
 [tool.setuptools.packages.find]
 include = ["mpl_markers"]

@@ -744,6 +744,7 @@ def draw_all(axes: plt.Axes, blit: bool = True):
     if not axes.figure.canvas.supports_blit:
         # draw all markers, including the active marker
         [m.draw() for m in axes.markers]
+        interactive.canvas_draw(axes.figure)
         return
 
     # raise error if marker_init_canvas has not been called yet
@@ -837,7 +838,8 @@ def init_canvas(fig: plt.Figure, event=None):
     if not fig.canvas.supports_blit:
         # for pdf and svg, we have to use the renderer passed into the event, or else the updates
         # won't apply to the correct figure.
-        interactive.canvas_draw(fig, event.renderer)
+        renderer = getattr(event, "renderer", None)
+        interactive.canvas_draw(fig, renderer)
         for axes in fig._marker_axes:
             [m.set_visible(False) for m in axes.markers]
 
@@ -868,7 +870,7 @@ def init_axes(
 
         The xd and yd parameter are arrays of x-axis/y-axis data values of each line on the active marker.
         kwargs are the same as the optional kwargs passed into add_handler.
-    ** properties
+    **properties
         any or all key value pairs found in style/default.json
 
     """
