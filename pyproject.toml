@@ -9,7 +9,7 @@ description = "interactive data markers for matplotlib"
 readme = "README.md"
 authors = [{ name = "Rick Lyon", email = "rlyon14@gmail.com" }]
 license = "MIT"
-license-files = ["LICENCSE.txt"]
+license-files = ["LICENSE.txt"]
 classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
