@@ -93,6 +93,17 @@ mplm.scatter_marker(
 ```
 ![example5](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example5.gif)
 
+## Markers in Jupyter Notebooks
+
+Markers are non-interactive in juypter notebooks with the default matplotlib backend. To enable interactive markers, first install the `ipympl` backend,
+
+`pip install ipympl`
+
+Then enable the backend in jupyter with,
+
+`matplotlib.use("ipympl")`
+
+This backend does not support blitting (the image is entirely redrawn and exported as a png on each draw event), so there may be some lag when dragging the marker(s) on the canvas.
 
 ## Styling
 The marker style is controlled by the `mpl_markers/style/default.json` file:
