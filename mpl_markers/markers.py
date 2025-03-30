@@ -759,7 +759,7 @@ def draw_all(axes: plt.Axes, blit: bool = True):
     [m.draw() for m in axes.markers if m != axes.marker_active]
 
     if blit:
-        # the active_background has everything draw on it except the active marker.
+        # the active_background has everything drawn on it except the active marker.
         # update the canvas first by blitting the other marker artists on it, then save the
         # active background
         axes.figure.canvas.blit(axes.bbox)
@@ -791,8 +791,8 @@ def draw_all(axes: plt.Axes, blit: bool = True):
 
 def init_canvas(fig: plt.Figure, event=None):
     """
-    Configures the figure canvas to support blitting so markers can be updated quickly. This updates the canvas background
-    image and should be called whenever the figure canvas is resized or modified.
+    Configures the figure canvas to support blitting so markers can be updated quickly. This updates the canvas 
+    background image and should be called whenever the figure canvas is resized or modified.
     """
 
     # draw canvas and return if markers have not been initialized
