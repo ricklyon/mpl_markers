@@ -35,9 +35,9 @@ _global_style = dict()
 def line_marker(
     x: float = None,
     y: float = None,
+    idx: int = None,
     lines: List[Line2D] = None,
     axes: plt.Axes = None,
-    alias_xdata: np.ndarray = None,
     call_handler: bool = False,
     xline: Union[dict, bool] = True,
     yline: Union[dict, bool] = False,
@@ -57,13 +57,12 @@ def line_marker(
         x-axis data value of marker
     y: float (optional)
         y-axis data value
+    idx: int, optional
+        index of line data to place marker at. If provided, overrides x and y arguments.
     lines: list (optional)
         list of line2D objects to attach marker to. If not provided, marker will attach to all lines on the axes.
     axes: plt.Axes (optional)
         Axes object to add markers to. Defaults to plt.gca()
-    alias_xdata: np.ndarray (optional)
-        xdata used for x/y data values in place of the actual x-axis data. Length must match the x-axis data of each line,
-        and each line on the marker must have identical lengths.
     call_handler: bool (optional)
         if True, calls the marker handler attached to the axes, if it exists. Defaults to False.
     xline: bool OR dictionary = True
@@ -126,12 +125,11 @@ def line_marker(
         lines,
         xlabel_formatter=xformatter,
         ylabel_formatter=yformatter,
-        alias_xdata=alias_xdata,
         anchor=anchor,
         **properties,
     )
 
-    m.set_position(x, y)
+    m.set_position(x, y, idx)
 
     # create new marker and append to the axes marker list
     axes.markers.append(m)
@@ -265,6 +263,7 @@ def axis_marker(
     ylabel: Union[dict, bool] = None,
     yformatter: Callable = None,
     xformatter: Callable = None,
+    placement: str = "lower"
 ) -> artists.AxisLabel:
     """
     Adds a marker at the axis edges.
@@ -336,6 +335,7 @@ def axis_marker(
         xlabel_formatter=xformatter,
         ylabel_formatter=yformatter,
         ref_marker=ref_marker,
+        placement=placement,
         **properties,
     )
     m.set_position(x, y)

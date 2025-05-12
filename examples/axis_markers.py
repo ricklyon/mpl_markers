@@ -11,7 +11,7 @@ ax.margins(x=0.2)
 
 # create horizontal axis marker
 m1 = mplm.axis_marker(
-    y=np.min(y1), yformatter="{:.2f}%", ylabel=dict(fontfamily="monospace")
+    y=np.min(y1), yformatter="{:.2f}%", ylabel=dict(fontfamily="monospace"), placement="upper"
 )
 
 # create second marker that is referenced from the first marker m1
@@ -20,6 +20,7 @@ mplm.axis_marker(
     ref_marker=m1,
     yformatter="{:.2f}%",
     ylabel=dict(fontfamily="monospace"),
+    placement="upper"
 )
 
 plt.show()

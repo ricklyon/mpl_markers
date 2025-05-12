@@ -12,7 +12,8 @@ FIG_NAMES = (
     "test_axlines_ignore.png",
     "test_set_xy.png",
     "test_unequal_xdata.png",
-    "test_alias.png",
+    "test_place_by_idx.png",
+    "test_place_by_idx2.png",
     "test_marker_properties.png",
     "test_handler.png",
     "test_axis_limits.png",
@@ -172,10 +173,10 @@ class TestLineMarker(unittest.TestCase):
 
         fig.savefig(self.fig_dir / "test_unequal_xdata.png")
 
-    def test_alias(self):
-        """use alias data to set the marker at a angle instead of xy point."""
+    def test_place_by_idx(self):
+        """use index to set the marker at a angle instead of xy point."""
         fig, (ax1) = plt.subplots(1, 1)
-        ax1.set_title("test_alias")
+        ax1.set_title("test_place_by_idx")
         ax1.set_aspect("equal")
         x1 = np.linspace(0, 2 * np.pi, 1000)
         x1_deg = np.rad2deg(x1)
@@ -189,9 +190,9 @@ class TestLineMarker(unittest.TestCase):
         # would be the imaginary part.
         # marker is set on the first line only
         angle = 30
+        angle_idx = np.argmin(np.abs(x1_deg - angle))
         m1 = mplm.line_marker(
-            x=angle,
-            alias_xdata=x1_deg,
+            idx=angle_idx,
             xline=False,
             yformatter=lambda x, y, idx: r"{:.2f}$^\circ$".format(x1_deg[idx]),
             lines=ln1,
@@ -204,7 +205,33 @@ class TestLineMarker(unittest.TestCase):
         # check that only the first line was added to the marker
         self.assertEqual(len(m1_yd), 1)
 
-        fig.savefig(self.fig_dir / "test_alias.png")
+        fig.savefig(self.fig_dir / "test_place_by_idx.png")
+
+    def test_place_by_idx2(self):
+        """use alias data to set the marker at a angle instead of xy point, with multiple lines"""
+
+        fig, (ax1) = plt.subplots(1, 1)
+        ax1.set_title("test_place_by_idx2")
+        f = np.linspace(0, 10)
+
+        ln1 = ax1.plot(np.ones(len(f)) * 1, f)
+        ln2 = ax1.plot(np.ones(len(f)) * 2, f)
+        ln3 = ax1.plot(np.ones(len(f)) * 3, f)
+
+        # unrelated alias data to show in label, not necessarily derivable from x/y data. 
+        sqrt_data = np.sqrt(f)
+        idx = 16
+        m1 = mplm.line_marker(
+            idx=idx,
+            xline=False,
+            yformatter=lambda x, y, idx: r"$\sqrt{{{:.1f}}}$={:.1f}".format(y, sqrt_data[idx]),
+        )
+
+        m1_xd, m1_yd = m1.get_data_points()
+        np.testing.assert_almost_equal(f[idx], m1_yd, decimal=2)
+        np.testing.assert_almost_equal([1, 2, 3], m1_xd, decimal=2)
+
+        fig.savefig(self.fig_dir / "test_place_by_idx2.png")
 
     def test_marker_properties(self):
         fig, ax = plt.subplots(1, 1)
