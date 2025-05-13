@@ -218,7 +218,7 @@ class TestLineMarker(unittest.TestCase):
         ln2 = ax1.plot(np.ones(len(f)) * 2, f)
         ln3 = ax1.plot(np.ones(len(f)) * 3, f)
 
-        # unrelated alias data to show in label, not necessarily derivable from x/y data. 
+        # unrelated alias data to show in label, not necessarily derivable from x/y data.
         sqrt_data = np.sqrt(f)
         idx = 16
         m1 = mplm.line_marker(
@@ -241,7 +241,7 @@ class TestLineMarker(unittest.TestCase):
         ax.plot(x2, np.cos(x2), label="cos(x)")
 
         m = mplm.line_marker(
-            x=0,
+            x=-2.0,
             ylabel=dict(
                 fontfamily="monospace",
                 color="teal",
@@ -250,6 +250,7 @@ class TestLineMarker(unittest.TestCase):
             ),
             xline=dict(linewidth=2, color="teal", alpha=0.2),
             xlabel=dict(fontfamily="monospace", color="teal", fontsize=8),
+            xformatter=lambda x: f"x={x:.1f}"
         )
 
         fig.savefig(self.fig_dir / "test_marker_properties.png")
@@ -355,9 +356,7 @@ class TestLineMarker(unittest.TestCase):
         np.testing.assert_array_almost_equal(m2_x, np.pi / 10, decimal=2)
 
         np.testing.assert_array_almost_equal(m1_y, 1, decimal=2)
-        np.testing.assert_array_almost_equal(
-            m2_x, np.abs(np.sin(np.pi / 10)), decimal=2
-        )
+        np.testing.assert_array_almost_equal(m2_x, np.abs(np.sin(np.pi / 10)), decimal=2)
 
         fig.savefig(self.fig_dir / "test_polar_nan.png")
 
