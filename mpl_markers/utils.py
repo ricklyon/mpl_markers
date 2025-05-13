@@ -22,22 +22,25 @@ def label_formatter(
     xd: float,
     yd: float,
     idx: int = None,
-    custom: Union[Callable, str] = None,
+    custom: Callable | str = None,
     mode: str = "x",
     precision: int = "{:.3f}",
 ) -> str:
     """
-    Returns a formatted string for the y-label marker at the data points xd, yd.
+    Returns a formatted string for the marker at the data points xd, yd.
     """
 
     if custom is not None:
         if isinstance(custom, Callable):
-            # try calling with the x, y data points first
-            try:
-                return custom(xd, yd, idx)
-            # call with just the x-data or y-data if above failed
-            except TypeError:
-                return custom(xd if mode == "x" else yd)
+            if mode == "x":
+                return custom(xd)
+            else:
+                # try calling with the x, y data points first
+                try:
+                    return custom(xd, yd, idx)
+                # call with just the x-data or y-data if above failed
+                except TypeError:
+                    return custom(xd if mode == "x" else yd)
 
         # custom formatting string
         else:
