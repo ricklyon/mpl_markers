@@ -27,8 +27,7 @@ ax.plot(x1, np.sin(x1)*np.cos(x1)**2)
 # create line marker at x=0.
 mplm.line_marker(x=0)
 ```
-In interactive matplotlib backends (i.e. Qt5Agg), the marker can be dragged to any location along the data line, or moved incrementally with the left/right arrow keys. Interactive markers are not supported for inline figures 
-generated in Jupyter Notebooks.
+In interactive matplotlib backends (i.e. Qt5Agg), the marker can be dragged to any location along the data line, or moved incrementally with the left/right arrow keys. 
 
 ![example1](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example1.gif)
 
@@ -103,7 +102,9 @@ Then enable the backend in jupyter with,
 
 `matplotlib.use("ipympl")`
 
-This backend does not support blitting (the image is entirely redrawn and exported as a png on each draw event), so there may be some lag when dragging the marker(s) on the canvas.
+This backend is still experimental with `mpl-markers`, expect a few issues when using it. It does not support blitting (the image is entirely redrawn and exported as a png on each draw event), so there is some lag when dragging markers.
+
+See [this notebook](examples/jupyter_markers.ipynb) for a full example.
 
 ## Styling
 The marker style is controlled by the `mpl_markers/style/default.json` file:

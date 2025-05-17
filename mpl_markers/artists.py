@@ -96,8 +96,8 @@ class MarkerLabel(AbstractArtist, matplotlib.text.Text):
         xlen, ylen = xy1 - xy0
 
         # set_position places the label's lower left corner at the point. If the user specifies the placement point
-        # at 'upper center' for example, the placement needs to be offset by x=+xlen and y=+ylen/2 to put the lower center
-        # of the label at the 'point' argument location.
+        # at 'upper center' for example, the placement needs to be offset by x=+xlen and y=+ylen/2 to put the lower 
+        # center of the label at the 'point' argument location.
         # matplotlib display coordinate system is (0,0) at lower left and (width, height) at the upper right
         # https://matplotlib.org/stable/tutorials/advanced/transforms_tutorial.html
 
@@ -154,9 +154,7 @@ class MarkerLabel(AbstractArtist, matplotlib.text.Text):
             }[loc_h]
 
             # apply the shift to the label bbox
-            l_bbox_shift = np.array(
-                [[h_ax_shift, v_ax_shift], [-h_ax_shift, -v_ax_shift]]
-            )
+            l_bbox_shift = np.array([[h_ax_shift, v_ax_shift], [-h_ax_shift, -v_ax_shift]])
             l_bbox += np.sum(l_bbox_shift * extrude, axis=0)
 
         else:
@@ -264,15 +262,11 @@ class LineLabel(MarkerArtist):
             ylabel["bbox"]["edgecolor"] = data_line.get_color()
 
             # initalize text box as the label
-            self.ylabel = MarkerLabel(
-                axes=axes, transform=None, verticalalignment="bottom", **ylabel
-            )
+            self.ylabel = MarkerLabel(axes=axes, transform=None, verticalalignment="bottom", **ylabel)
 
         if datadot:
             # initalize marker dot at data point
-            self.datadot = MarkerLine(
-                axes=data_line.axes, color=data_line.get_color(), **datadot
-            )
+            self.datadot = MarkerLine(axes=data_line.axes, color=data_line.get_color(), **datadot)
 
         if yline:
             self.yline = MarkerLine(axes=data_line.axes, **yline)
@@ -298,7 +292,7 @@ class LineLabel(MarkerArtist):
     def yd(self):
         return self._yd
 
-    def set_position_by_index(self, idx, x_alias=None):
+    def set_position_by_index(self, idx):
 
         self._xdata = self.data_line.get_xdata()
         self._ydata = self.data_line.get_ydata()
@@ -332,11 +326,8 @@ class LineLabel(MarkerArtist):
         xl = 0 if self.yline else xl
 
         if self.ylabel:
-            x_lbl_data = self._xd if x_alias is None else x_alias
             # set the x position to the data point location plus a small pad (in display coordinates)
-            txt = utils.label_formatter(
-                self.axes, x_lbl_data, self._yd, self._idx, self.ylabel_formatter, mode="y"
-            )
+            txt = utils.label_formatter(self.axes, self._xd, self._yd, self._idx, self.ylabel_formatter, mode="y")
 
             self.ylabel.set_position(
                 (xl, yl),
@@ -352,11 +343,10 @@ class LineLabel(MarkerArtist):
         if self.datadot:
             self.datadot.set_data([self._xd], [self._yd])
 
-    def set_position(
-        self, x: float = None, y: float = None, disp: bool = False, mode: str = None, x_alias = None
-    ):
+    def set_position(self, x: float = None, y: float = None, idx: int = None, disp: bool = False, mode: str = None):
         """
-        Returns the index of the line data for the point closest to the x,y data values, and the distance in data coordinates
+        Returns the index of the line data for the point closest to the x,y data values, and the distance in data 
+        coordinates
         """
         if disp:
             x, y = utils.display2data(self.axes, (x, y))
@@ -365,26 +355,26 @@ class LineLabel(MarkerArtist):
             x = (x + np.pi) % (2 * np.pi) - np.pi
 
         # ignore positional arguments based on the placement mode.
+        if mode == "idx":
+            self.set_position_by_index(idx)
+            return
+
         if mode == "x" and x is not None:
             dist = np.abs(x - self._xdata)
         elif mode == "y" and y is not None:
             dist = np.abs(y - self._ydata)
-        elif (
-            x is not None and y is not None
-        ):  # placement mode 'xy' requires both arguments
-            dist = np.sqrt((x - self._xdata)**2 + (y - self._ydata)**2)
+        elif x is not None and y is not None:  # placement mode 'xy' requires both arguments
+            dist = np.sqrt((x - self._xdata) ** 2 + (y - self._ydata) ** 2)
         else:
-            raise ValueError(
-                f"Insufficent positional arguments for marker with placement mode: {mode}"
-            )
+            raise ValueError(f"Insufficent positional arguments for marker with placement mode: {mode}")
 
         # set position to the data point with the smallest error
-        self.set_position_by_index(np.nanargmin(dist), x_alias)
+        self.set_position_by_index(np.nanargmin(dist))
 
 
 class AxisLabel(MarkerArtist):
     """
-    Places markers on the x and y axes. Placement is not constrained to data points.
+    Places markers on the x and y axis. Placement is not constrained to data points.
     """
 
     def __init__(
@@ -398,6 +388,7 @@ class AxisLabel(MarkerArtist):
         xlabel_formatter: Callable = None,
         ylabel_formatter: Callable = None,
         ref_marker: MarkerArtist = None,
+        placement: str = "lower",
     ):
 
         self.xlabel = None
@@ -408,22 +399,19 @@ class AxisLabel(MarkerArtist):
         self.xlabel_formatter = xlabel_formatter
         self.ylabel_formatter = ylabel_formatter
         self.ref_marker = ref_marker
+        self.placement = placement
 
         if xline:
             self.xline = MarkerLine(axes=axes, **xline)
 
         if xlabel:
-            self.xlabel = MarkerLabel(
-                axes=axes, transform=None, verticalalignment="bottom", **xlabel
-            )
+            self.xlabel = MarkerLabel(axes=axes, transform=None, verticalalignment="bottom", **xlabel)
 
         if yline:
             self.yline = MarkerLine(axes=axes, **yline)
 
         if ylabel:
-            self.ylabel = MarkerLabel(
-                axes=axes, transform=None, verticalalignment="bottom", **ylabel
-            )
+            self.ylabel = MarkerLabel(axes=axes, transform=None, verticalalignment="bottom", **ylabel)
 
         if axisdot and xline and yline:
             # initalize marker dot at data point
@@ -445,10 +433,9 @@ class AxisLabel(MarkerArtist):
         x: float = None,
         y: float = None,
         disp: bool = False,
-        x_alias: float = None,
     ):
 
-        self._position_args = (x, y, disp, x_alias)
+        self._position_args = (x, y, disp)
 
         dpi = self.axes.figure.dpi
 
@@ -473,25 +460,19 @@ class AxisLabel(MarkerArtist):
                     lbl_xd = self._xd - self.ref_marker._xd
                     lbl_sgn = r"$(\Delta)+$" if lbl_xd > 0 else r"$(\Delta)-$"
                     txt = utils.label_formatter(
-                        self.axes,
-                        np.abs(lbl_xd),
-                        self._yd,
-                        custom=self.xlabel_formatter,
-                        mode="x",
+                        self.axes, np.abs(lbl_xd), self._yd, custom=self.xlabel_formatter, mode="x",
                     )
                     lbl = lbl_sgn + txt
                 else:
                     lbl = utils.label_formatter(
-                        self.axes,
-                        self._xd if x_alias is None else x_alias,
-                        self._yd,
-                        custom=self.xlabel_formatter,
-                        mode="x",
+                        self.axes, self._xd, self._yd, custom=self.xlabel_formatter, mode="x",
                     )
 
-                xl, _ = utils.data2display(self.axes, (x, 0))
+                ylim_i = dict(lower=0, upper=1)[self.placement]
+                xl, yl = utils.data2display(self.axes, (x, self.axes.get_ylim()[ylim_i]))
+
                 self.xlabel.set_position(
-                    (xl, 0),
+                    (xl, yl),
                     lbl,
                     anchor="lower center",
                     disp=True,
@@ -507,7 +488,8 @@ class AxisLabel(MarkerArtist):
             y = np.clip(y, *self.axes.get_ylim())
             self._yd = y
 
-            _, yl = utils.data2display(self.axes, (0, y))
+            xlim_i = dict(lower=0, upper=1)[self.placement]
+            xl, yl = utils.data2display(self.axes, (self.axes.get_xlim()[xlim_i], y))
 
             if self.ylabel:
                 # use reference data if available
@@ -532,7 +514,7 @@ class AxisLabel(MarkerArtist):
                     )
 
                 self.ylabel.set_position(
-                    (0, yl),
+                    (xl, yl),
                     lbl,
                     anchor="center left",
                     disp=True,
@@ -582,10 +564,7 @@ class MeshLabel(MarkerArtist):
         self.datadot = None
         self.zlabel_formatter = zlabel_formatter
         self.quadmesh = quadmesh
-        self.coords = (
-            quadmesh.get_coordinates().data[:-1, :-1]
-            + quadmesh.get_coordinates().data[1:, 1:]
-        ) / 2
+        self.coords = (quadmesh.get_coordinates().data[:-1, :-1] + quadmesh.get_coordinates().data[1:, 1:]) / 2
 
         self._yidx = None
         self._xidx = None
@@ -595,9 +574,7 @@ class MeshLabel(MarkerArtist):
 
         if zlabel:
             # initalize text box as the label
-            self.zlabel = MarkerLabel(
-                axes=axes, transform=None, verticalalignment="bottom", **zlabel
-            )
+            self.zlabel = MarkerLabel(axes=axes, transform=None, verticalalignment="bottom", **zlabel)
 
         # initalize marker dot at data point
         self.datadot = MarkerLine(
@@ -698,14 +675,13 @@ class MeshLabel(MarkerArtist):
 
     def set_position(self, x: float, y: float, disp: bool = False):
         """
-        Returns the index of the line data for the point closest to the x,y data values, and the distance in data coordinates
+        Returns the index of the line data for the point closest to the x,y data values, and the distance in data 
+        coordinates
         """
         if disp:
             x, y = utils.display2data(self.axes, (x, y))
 
-        dist = np.argmin(
-            np.sum(np.abs(self.coords - np.array([x, y])[None, None]), axis=-1)
-        )
+        dist = np.argmin(np.sum(np.abs(self.coords - np.array([x, y])[None, None]), axis=-1))
 
         self._xidx, self._yidx = np.unravel_index(dist, self.coords.shape[:2])
 
@@ -713,9 +689,9 @@ class MeshLabel(MarkerArtist):
         self.set_position_by_index(self._xidx, self._yidx)
 
 
-class DataMarker(MarkerArtist):
+class LineMarker(MarkerArtist):
     """
-    Places a marker on each line in axes.
+    Marker attached to multiple lines.
     """
 
     def __init__(
@@ -729,55 +705,69 @@ class DataMarker(MarkerArtist):
         yline: dict = None,
         xlabel_formatter: Callable = None,
         ylabel_formatter: Callable = None,
-        alias_xdata: np.ndarray = None,
         anchor: str = "center left",
     ):
         """
         Parameters:
         -----------
-
-
+        axes : plt.Axes
+            Axes object
+        lines : list
+            list of Line2D objects to attach marker to. 
+        xlabel : dict, optional
+            Axes.text() properties for x-axis label.
+        ylabel : dict, optional
+            Axes.text() properties for y-axis label.
+        datadot : dict, optional
+            Line2D properties for marker dot.
+        xline : bool | dict, optional
+            Line2D properties for vertical line at marker location
+        yline : dict, optional
+            Line2D properties for a horizontal line at the marker locations.
+        xlabel_formatter : (x: float) -> str, optional
+            function that returns a string to be placed in the x-axis label given a x data coordinate. Also accepts
+            a string formatter (e.g. "{:.4f}").
+        ylabel_formatter : (x: float, y: float, idx: int) -> str, optional
+            function that returns a string to be placed in the data label given a x, y data coordinate, and the
+            index of the line data the marker is located at. Also accepts a string formatter (e.g "{:.4f}").
+        anchor : str = None
+            anchor location for the y-axis data labels. One of "upper/lower/center left/right/center". Default is
+            "center left"
         """
         self.data_labels = []
         artists = []
         self.xaxis_label = None
-        self.lines = lines
         self.ylabel_artists = []
         self.axes = axes
-        self._alias_xdata = alias_xdata
         self._anchor = anchor
 
-        # check if all lines have monotonic x-axis data
+        # get all lines that have valid data. check if all lines have monotonic x-axis data
         self._monotonic_xdata = True
+        self.lines = []
         for ln in lines:
-            if self._monotonic_xdata:
+            # skip lines with no finite values
+            if not np.any(np.isfinite(ln.get_xdata())):
+                continue
+
+            elif self._monotonic_xdata:
                 diff = np.diff(ln.get_xdata())
-                self._monotonic_xdata = np.all(diff >= 0) or np.all(diff <= 0)
+                self._monotonic_xdata = np.all(diff > 0) or np.all(diff < 0)
+
+            self.lines += [ln]
 
         # check that ylines have associated labels or dots
         if yline and not (ylabel or datadot):
-            raise TypeError("y-axis lines require labels or marker dots.")
+            raise ValueError("y-axis lines require labels or marker dots.")
 
         # create single x-axes label shared by all the data markers
         if xline or xlabel:
-            self.xaxis_label = AxisLabel(
-                axes, xlabel, False, xline, False, False, xlabel_formatter, None
-            )
-        
+            self.xaxis_label = AxisLabel(axes, xlabel, False, xline, False, False, xlabel_formatter, None)
+
         # data labels for each line
         if ylabel or datadot or yline:
             # turn off ylabel on data markers if yline is present. The axes label will be used as the data label.
             self.data_labels = [
-                LineLabel(
-                    axes,
-                    ln,
-                    datadot,
-                    ylabel,
-                    yline,
-                    ylabel_formatter,
-                    anchor=anchor,
-                )
-                for ln in lines
+                LineLabel(axes, ln, datadot, ylabel, yline, ylabel_formatter, anchor=anchor) for ln in self.lines
             ]
 
         # build list of all artists in the marker
@@ -785,18 +775,10 @@ class DataMarker(MarkerArtist):
         # line and dot artists first
         if self.xaxis_label:
             artists += self.xaxis_label._artists[:2]
-        artists += list(
-            itertools.chain.from_iterable(
-                [lbl._artists[:-1] for lbl in self.data_labels]
-            )
-        )
+        artists += list(itertools.chain.from_iterable([lbl._artists[:-1] for lbl in self.data_labels]))
 
         # then label artists on top
-        artists += list(
-            itertools.chain.from_iterable(
-                [lbl._artists[-1:] for lbl in self.data_labels]
-            )
-        )
+        artists += list(itertools.chain.from_iterable([lbl._artists[-1:] for lbl in self.data_labels]))
         if self.xaxis_label:
             artists += self.xaxis_label._artists[2:]
 
@@ -810,68 +792,75 @@ class DataMarker(MarkerArtist):
 
         super().__init__(axes, artists)
 
-    def set_position(
-        self, x: float = None, y: float = None, disp: bool = False, mode: str = "x"
-    ):
+    def set_position(self, x: float = None, y: float = None, idx: int = None, disp: bool = False):
         """
-        Test 
-        
+        Set the position of all line markers to the nearest data point to x/y. 
+
         Parameters:
         -----------
-        mode: str -- ['x', 'y', 'xy']
-            controls if line markers are placed by the x value ('x'), the y value ('y'), or by both ('xy').
+        x : float
+            x position of marker, in data coordinates unless disp=True.
+        y : float
+            y position of marker, in data coordinates unless disp=True. If marker has a xline object, the y coordinate
+            is ignored.
+        idx : float, optional
+            index of line data to place marker at. All line data must be the same length if using this parameter.
+            Overrides x, y parameters.
+        disp : bool, default = False
+            if True, x and y are interpreted in display coordinates.
+        
         """
-
-        # override the placement mode if lines aren't monotonic
-        if (x and y) and not (self._monotonic_xdata):
+        # determine placement mode
+        if idx is not None:
+            mode = "idx"
+        elif disp:
+            mode = "xy"
+        # if lines aren't monotonic use both x and y coordinates for placement. using only x is abiguous
+        elif (x and y) and not (self._monotonic_xdata):
+            mode = "xy"
+        # ignore y and use only the x coordinates to place markers if a xaxis label or line is attached
+        elif self.xaxis_label and x is not None:
+            mode = "x"
+        elif y is None:
+            mode = "x"
+        elif x is None:
+            mode = "y"
+        else:
             mode = "xy"
 
-        if np.any(self._alias_xdata):
-            # allow the alias data to be used for positioning the marker if y is not given, and the coordinates
-            # aren't display coords
-            if not disp and y is None:
-                a_idx = np.nanargmin(np.abs(x - self._alias_xdata))
-                # change x/y to data coordinates using the alias data index
-                x = self.lines[0].get_xdata()[a_idx]
-                y = self.lines[0].get_ydata()[a_idx]
-                mode = "xy"
-            # otherwise get the alias index from the normal data coordinates
-            else:
-                a_idx = np.nanargmin(np.abs(x - self.lines[0].get_xdata()))
-
-            x_alias = self._alias_xdata[a_idx]
-        else:
-            x_alias = None
-
-        if not disp and np.any(self._alias_xdata) and y is None:
-            a_idx = np.nanargmin(np.abs(x - self._alias_xdata))
-            x = self.lines[0].get_xdata()[a_idx]
-
         # save the arguments to update the marker position when the axes bbox changes later
-        self._position_args = (x, y, disp, mode)
+        self._position_args = (x, y, idx, disp)
 
-        # set the positions for each of the line labels
+        # initialize location coordaintes for all markers
         xd_yd = np.zeros((2, len(self.lines)))
         self._xlbl = None
 
+        # place ylabels
         for ii, lbl in enumerate(self.data_labels):
-            lbl.set_position(x, y, disp, mode, x_alias)
+            lbl.set_position(x, y, idx, disp, mode)
             xd_yd[:, ii] = lbl._xd, lbl._yd
 
         self._xd, self._yd = xd_yd
 
+        # place the x-axis label. Since there are multiple lines attached to the same x-line, put this at the line
+        # x coordinate of the ylabel that is closest to x.
         if self.xaxis_label:
 
-            if self.axes.name == "polar":
-                # wrap xdata between -180 and 180 if axes is polar
-                x = (x + np.pi) % (2 * np.pi) - np.pi
+            if mode == "idx":
+                nearest_lbl_idx = idx
 
-            # find the label with the closest x data point to the target position and place the x-axis marker there
-            nearest_lbl_idx = np.nanargmin(np.abs(self._xd - x))
-            self._xlbl = self._xd[nearest_lbl_idx]
+            else:
+                if self.axes.name == "polar":
+                    # wrap xdata between -180 and 180 if axes is polar
+                    x = (x + np.pi) % (2 * np.pi) - np.pi
 
-            self.xaxis_label.set_position(self._xlbl, x_alias)
+                # find the label with the closest x data point to the target position and place the x-axis marker there
+                nearest_lbl_idx = np.nanargmin(np.abs(self._xd - x))
+                self._xlbl = self._xd[nearest_lbl_idx]
 
+            self.xaxis_label.set_position(self._xlbl)
+
+        # space the labels so they don't overlap
         self._space_labels()
 
     def get_data_points(self):
@@ -898,13 +887,12 @@ class DataMarker(MarkerArtist):
         if not len(vis_artists):
             return
 
-        sorted_labels = sorted(
-            vis_artists, key=lambda x: utils.get_artist_bbox(x, pad)[0, 1]
-        )
+        sorted_labels = sorted(vis_artists, key=lambda x: utils.get_artist_bbox(x, pad)[0, 1])
 
         s_bbox = np.array([utils.get_artist_bbox(lbl, pad) for lbl in sorted_labels])
 
-        # get overlap that each box makes with the one above it. use roll to place the upper boxes in the place of its lower neighbor
+        # get overlap that each box makes with the one above it. use roll to place the upper boxes in the place of its 
+        # lower neighbor
         bbox_above = np.roll(s_bbox, shift=-1, axis=0)
         # get overlap that each box makes with the one below it.
         bbox_below = np.roll(s_bbox, shift=1, axis=0)
@@ -922,9 +910,7 @@ class DataMarker(MarkerArtist):
 
         # lower box overlap is with the xlabel if present
         if self._has_xlabel:
-            bbox_ovl_lower[0] = -s_bbox[0] + np.roll(
-                utils.get_artist_bbox(self.xaxis_label.xlabel, pad), 1, axis=0
-            )
+            bbox_ovl_lower[0] = -s_bbox[0] + np.roll(utils.get_artist_bbox(self.xaxis_label.xlabel, pad), 1, axis=0)
         # if there is no xlabel, use the bounding box for the axes
         else:
             bbox_ovl_lower[0] = -s_bbox[0] + ax_bbox[0]
@@ -982,7 +968,7 @@ class DataMarker(MarkerArtist):
 
 class MeshMarker(MarkerArtist):
     """
-    Places a marker on each line in axes.
+    Places a marker on a pcolormesh axes.
     """
 
     def __init__(
@@ -1026,9 +1012,7 @@ class MeshMarker(MarkerArtist):
             )
 
         # label for the z data
-        self.data_label = MeshLabel(
-            axes, quadmesh, zlabel, zlabel_formatter, anchor=anchor
-        )
+        self.data_label = MeshLabel(axes, quadmesh, zlabel, zlabel_formatter, anchor=anchor)
 
         # build list of all artists in the marker
         # line and dot artists first
@@ -1107,16 +1091,12 @@ class ScatterMarker(MarkerArtist):
 
         # create xline object
         if xline:
-            self.xline = AxisLabel(
-                axes, xlabel, False, xline, False, False, xlabel_formatter, None
-            )
+            self.xline = AxisLabel(axes, xlabel, False, xline, False, False, xlabel_formatter, None)
             artists += self.xline._artists
 
         # data labels for each line
         if yline:
-            self.yline = AxisLabel(
-                axes, False, ylabel, False, yline, False, None, ylabel_formatter
-            )
+            self.yline = AxisLabel(axes, False, ylabel, False, yline, False, None, ylabel_formatter)
             artists += self.yline._artists
 
         # initalize marker dot at data point
@@ -1132,9 +1112,7 @@ class ScatterMarker(MarkerArtist):
             # match the ylabel color to the scatter collection color
             ylabel = dcopy(ylabel)
             ylabel["bbox"]["edgecolor"] = collection.get_facecolor()[0]
-            self.ylabel = MarkerLabel(
-                axes=axes, transform=None, verticalalignment="bottom", **ylabel
-            )
+            self.ylabel = MarkerLabel(axes=axes, transform=None, verticalalignment="bottom", **ylabel)
             artists += [self.ylabel]
 
         self.set_position(0, 0)
@@ -1156,16 +1134,14 @@ class ScatterMarker(MarkerArtist):
         xdata, ydata = self.collection.get_offsets().data.T
 
         if x is not None and y is not None:
-            dist = np.sqrt((x - xdata)**2 + (y - ydata)**2)
+            dist = np.sqrt((x - xdata) ** 2 + (y - ydata) ** 2)
         elif x is not None:
             dist = np.abs(x - xdata)
         elif y is not None:
             dist = np.abs(y - ydata)
         else:
-            raise ValueError(
-                f"Insufficent positional arguments for marker."
-            )
-        
+            raise ValueError(f"Insufficent positional arguments for marker.")
+
         # set position to the data point with the smallest error
         self.set_position_by_index(np.nanargmin(dist))
 
