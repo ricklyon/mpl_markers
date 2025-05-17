@@ -374,7 +374,7 @@ class LineLabel(MarkerArtist):
 
 class AxisLabel(MarkerArtist):
     """
-    Places markers on the x and y axes. Placement is not constrained to data points.
+    Places markers on the x and y axis. Placement is not constrained to data points.
     """
 
     def __init__(
@@ -689,9 +689,9 @@ class MeshLabel(MarkerArtist):
         self.set_position_by_index(self._xidx, self._yidx)
 
 
-class DataMarker(MarkerArtist):
+class LineMarker(MarkerArtist):
     """
-    Places a marker on each line in axes.
+    Marker attached to multiple lines.
     """
 
     def __init__(
@@ -710,23 +710,50 @@ class DataMarker(MarkerArtist):
         """
         Parameters:
         -----------
-
-
+        axes : plt.Axes
+            Axes object
+        lines : list
+            list of Line2D objects to attach marker to. 
+        xlabel : dict, optional
+            Axes.text() properties for x-axis label.
+        ylabel : dict, optional
+            Axes.text() properties for y-axis label.
+        datadot : dict, optional
+            Line2D properties for marker dot.
+        xline : bool | dict, optional
+            Line2D properties for vertical line at marker location
+        yline : dict, optional
+            Line2D properties for a horizontal line at the marker locations.
+        xlabel_formatter : (x: float) -> str, optional
+            function that returns a string to be placed in the x-axis label given a x data coordinate. Also accepts
+            a string formatter (e.g. "{:.4f}").
+        ylabel_formatter : (x: float, y: float, idx: int) -> str, optional
+            function that returns a string to be placed in the data label given a x, y data coordinate, and the
+            index of the line data the marker is located at. Also accepts a string formatter (e.g "{:.4f}").
+        anchor : str = None
+            anchor location for the y-axis data labels. One of "upper/lower/center left/right/center". Default is
+            "center left"
         """
         self.data_labels = []
         artists = []
         self.xaxis_label = None
-        self.lines = lines
         self.ylabel_artists = []
         self.axes = axes
         self._anchor = anchor
 
-        # check if all lines have monotonic x-axis data
+        # get all lines that have valid data. check if all lines have monotonic x-axis data
         self._monotonic_xdata = True
+        self.lines = []
         for ln in lines:
-            if self._monotonic_xdata:
+            # skip lines with no finite values
+            if not np.any(np.isfinite(ln.get_xdata())):
+                continue
+
+            elif self._monotonic_xdata:
                 diff = np.diff(ln.get_xdata())
                 self._monotonic_xdata = np.all(diff > 0) or np.all(diff < 0)
+
+            self.lines += [ln]
 
         # check that ylines have associated labels or dots
         if yline and not (ylabel or datadot):
@@ -740,7 +767,7 @@ class DataMarker(MarkerArtist):
         if ylabel or datadot or yline:
             # turn off ylabel on data markers if yline is present. The axes label will be used as the data label.
             self.data_labels = [
-                LineLabel(axes, ln, datadot, ylabel, yline, ylabel_formatter, anchor=anchor) for ln in lines
+                LineLabel(axes, ln, datadot, ylabel, yline, ylabel_formatter, anchor=anchor) for ln in self.lines
             ]
 
         # build list of all artists in the marker
@@ -767,10 +794,21 @@ class DataMarker(MarkerArtist):
 
     def set_position(self, x: float = None, y: float = None, idx: int = None, disp: bool = False):
         """
+        Set the position of all line markers to the nearest data point to x/y. 
 
         Parameters:
         -----------
-
+        x : float
+            x position of marker, in data coordinates unless disp=True.
+        y : float
+            y position of marker, in data coordinates unless disp=True. If marker has a xline object, the y coordinate
+            is ignored.
+        idx : float, optional
+            index of line data to place marker at. All line data must be the same length if using this parameter.
+            Overrides x, y parameters.
+        disp : bool, default = False
+            if True, x and y are interpreted in display coordinates.
+        
         """
         # determine placement mode
         if idx is not None:
@@ -793,16 +831,19 @@ class DataMarker(MarkerArtist):
         # save the arguments to update the marker position when the axes bbox changes later
         self._position_args = (x, y, idx, disp)
 
-        # set the positions for each of the line labels
+        # initialize location coordaintes for all markers
         xd_yd = np.zeros((2, len(self.lines)))
         self._xlbl = None
 
+        # place ylabels
         for ii, lbl in enumerate(self.data_labels):
             lbl.set_position(x, y, idx, disp, mode)
             xd_yd[:, ii] = lbl._xd, lbl._yd
 
         self._xd, self._yd = xd_yd
 
+        # place the x-axis label. Since there are multiple lines attached to the same x-line, put this at the line
+        # x coordinate of the ylabel that is closest to x.
         if self.xaxis_label:
 
             if mode == "idx":
@@ -819,6 +860,7 @@ class DataMarker(MarkerArtist):
 
             self.xaxis_label.set_position(self._xlbl)
 
+        # space the labels so they don't overlap
         self._space_labels()
 
     def get_data_points(self):
@@ -926,7 +968,7 @@ class DataMarker(MarkerArtist):
 
 class MeshMarker(MarkerArtist):
     """
-    Places a marker on each line in axes.
+    Places a marker on a pcolormesh axes.
     """
 
     def __init__(

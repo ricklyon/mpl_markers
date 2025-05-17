@@ -2,7 +2,6 @@ from typing import Callable, List, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import ticker
 from matplotlib.lines import Line2D
 from matplotlib.collections import QuadMesh, PathCollection
 import itertools
@@ -38,7 +37,6 @@ def line_marker(
     idx: int = None,
     lines: List[Line2D] = None,
     axes: plt.Axes = None,
-    call_handler: bool = False,
     xline: dict | bool = True,
     yline: dict | bool = False,
     datadot: dict | bool = True,
@@ -47,9 +45,10 @@ def line_marker(
     xformatter: Callable[[float], str] = None,
     yformatter: Callable[[float, float, int], str] = None,
     anchor: str = "center left",
-) -> artists.DataMarker:
+    call_handler: bool = False,
+) -> artists.LineMarker:
     """
-    Adds a line marker to cartesian or polar plot.
+    Add a line marker to cartesian or polar plot.
 
     Parameters
     ----------
@@ -60,38 +59,37 @@ def line_marker(
     idx : int, optional
         index of line data to place marker at. Overrides x and y arguments.
     lines : list, optional
-        list of line2D objects to attach marker to. If not provided, marker will attach to all lines on the axes.
+        list of Line2D objects to attach marker to. If not provided, marker will attach to all lines on the axes.
     axes : plt.Axes, optional
-        Axes object to add markers to. Defaults to plt.gca()
-    call_handler : bool, optional
-        if True, calls the marker handler attached to the axes, if it exists. Defaults to False.
-    xline : bool | dict = True
+        Axes object to add markers to. Default is the current active axes, ``plt.gca()``.
+    xline : bool | dict, default: True
         If True, shows a vertical line at the x value of the marker. If dictionary, parameters are passed
-        into Line2D.
-    yline : bool | dict  = False
+        to Line2D.
+    yline : bool | dict, default: False
         If True, shows a horizontal line at the y value of the marker. If dictionary, parameters are passed
-        into Line2D.
-    datadot : bool | dict = True
-        If True, shows a dot at the data point of the marker. If dictionary, parameters are passed into Line2D.
-    xlabel : bool | dict  = False
+        to Line2D.
+    datadot : bool | dict, default: True
+        If True, shows a dot at the data point of the marker. If dictionary, parameters are passed to Line2D.
+    xlabel : bool | dict, default: False
         If True, shows a text box of the x value of the marker at the bottom of the axes. If dictionary, parameters are 
-        passed into axes.text()
-    ylabel : bool | dict  = True
+        passed into Axes.text()
+    ylabel : bool | dict, default: True
         If True, shows a text box of the y value of the marker at the data point location. If dictionary, parameters are 
-        passed into axes.text()
+        passed into Axes.text()
     xformatter : (x: float) -> str, optional
         function that returns a string to be placed in the x-axis label given a x data coordinate. Also accepts
-        a string formatter (e.g "{:.4f}").
+        a string formatter (e.g. "{:.4f}").
     yformatter : (x: float, y: float, idx: int) -> str, optional
-        function that returns a string to be placed in the data label given a x and y data coordinate.
-        Also accepts a string formatter (e.g "{:.4f}").
+        function that returns a string to be placed in the data label given a x, y data coordinate, and the
+        index of the line data the marker is located at. Also accepts a string formatter (e.g "{:.4f}").
     anchor : str = None
         anchor location for the y-axis data labels. One of "upper/lower/center left/right/center". Default is
         "center left"
-
+    call_handler : bool, default: False
+        if True, calls the marker handler attached to the axes after adding the marker, if it exists. Default is False.
     Returns
     -------
-    artists.DataMarker object
+    artists.LineMarker
     """
 
     # get current axes if user did not provide one
@@ -121,7 +119,7 @@ def line_marker(
         yformatter = axes._marker_yformatter
 
     # create marker on the existing data lines
-    m = artists.DataMarker(
+    m = artists.LineMarker(
         axes,
         lines,
         xlabel_formatter=xformatter,
@@ -153,11 +151,11 @@ def mesh_marker(
     xlabel: bool | dict = False,
     ylabel: bool | dict = False,
     zlabel: bool | dict= True,
-    xformatter: Callable = None,
-    yformatter: Callable = None,
-    zformatter: Callable = None,
-    call_handler: bool = False,
+    xformatter: Callable[[float], str] = None,
+    yformatter: Callable[[float], str] = None,
+    zformatter: Callable[[float], str] = None,
     anchor: str = "center left",
+    call_handler: bool = False,
 ) -> artists.MeshMarker:
     """
     Adds new marker on a pcolormesh plot.
@@ -168,39 +166,41 @@ def mesh_marker(
         x-axis data value of marker
     y : float, optional
         y-axis data value of marker
-    axes: plt.Axes, optional
-        Axes object to add markers to. Defaults to plt.gca()
-    xline: bool | dict = True
-        shows a vertical line at the x value of the marker. If dictionary, parameters are passed
-        into Line2D.
-    yline: bool | dict  = True
-        shows a horizontal line at the y value of the marker. If dictionary, parameters are passed
-        into Line2D.
-    xlabel: bool | dict = False
-        shows a text box of the x value of the marker at the bottom of the axes. If dictionary, parameters are passed
-        into axes.text()
-    ylabel: bool | dict  = False
-        shows a text box of the y value of the maker along the y axes. If dictionary, parameters are passed
-        into axes.text()
-    zlabel: bool | dict  = True
+    axes : plt.Axes, optional
+        Axes object to add markers to. Default is the current active axes, ``plt.gca()``.
+    xline : bool | dict, default: True
+        If True, shows a vertical line at the x value of the marker. If dictionary, parameters are passed
+        to Line2D.
+    yline : bool | dict, default: True
+        If True, shows a horizontal line at the y value of the marker. If dictionary, parameters are passed
+        to Line2D.
+    xlabel : bool | dict, default: False
+        If True, shows a text box of the x value of the marker on the x-axis. If dictionary, parameters are 
+        passed into Axes.text()
+    ylabel : bool | dict, default: False
+        If True, shows a text box of the y value of the marker on the y-axis. If dictionary, parameters are 
+        passed into Axes.text()
+    zlabel : bool | dict, default: True
         shows a text box of the z value of the marker at the data point location. If dictionary, parameters are passed
         into axes.text()
-    xformatter: Callable = None
-        function that returns a string to be placed in the x-axis label given a x data coordinate
-            def xformatter(x: float, idx:int) -> str
-    yformatter: Callable = None
-        function that returns a string to be placed in the data label given a x and y data coordinate
-            def yformatter(x: float, y:float, idx:int) -> str
-    zformatter: Callable = None
-        function that returns a string to be placed in the z-axis label given a xy data coordinate
-            def xformatter(x: float, idx:int) -> str
-    anchor: str = None
+    xformatter : (x: float) -> str, optional
+        function that returns a string to be placed in the x-axis label given a x data coordinate.
+        Also accepts a string formatter (e.g. "{:.4f}").
+    yformatter : (y: float) -> str, optional
+        function that returns a string to be placed in the y-axis label give a y data coordinate.
+        Also accepts a string formatter (e.g. "{:.4f}").
+    zformatter : (z: float) -> str, optional
+        function that returns a string to be placed in the z-axis label given a z data coordinate.
+        Also accepts a string formatter (e.g. "{:.4f}").
+    anchor : str = None
         anchor location for the data labels. One of "upper/lower/center left/right/center". Default is
         "center left"
+    call_handler : bool, default: False
+        if True, calls the marker handler attached to the axes after adding the marker, if it exists. Default is False.
 
-    Returns:
-    --------
-    Marker object
+    Returns
+    -------
+    artists.MeshMarker
     """
 
     # get current axes if user did not provide one
@@ -257,51 +257,55 @@ def axis_marker(
     y: float = None,
     axes: plt.Axes = None,
     ref_marker: artists.AxisLabel = None,
-    xline: Union[dict, bool] = None,
-    yline: Union[dict, bool] = None,
-    axisdot: Union[dict, bool] = None,
-    xlabel: Union[dict, bool] = None,
-    ylabel: Union[dict, bool] = None,
-    yformatter: Callable = None,
-    xformatter: Callable = None,
+    xline: bool | dict = None,
+    yline: bool | dict = None,
+    axisdot: bool | dict = None,
+    xlabel: bool | dict = None,
+    ylabel: bool | dict= None,
+    xformatter: Callable[[float], str] = None,
+    yformatter: Callable[[float], str] = None,
     placement: str = "lower",
 ) -> artists.AxisLabel:
     """
-    Adds a marker at the axis edges.
+    Adds an axis marker that moves freely on the axes, not constrained to data lines. 
+    If x and y positions are given, creates a crosshair marker, otherwise creates a vertical line (for y) and 
+    a horizontal line (for x). Lines by default have the associated label at the bottom (x) or left (y) side of the
+    axes.
 
     Parameters
     ----------
-    x: float
-        x-axis value (in data coordinates) of marker
-    y: float (optional)
-        y-axis value of marker
-    axes: plt.Axes (optional)
-        Axes object to add markers to. Defaults to plt.gca()
-    ref_marker: Marker (optional):
-        reference marker. If provided, the marker will show relative values from the reference.
-    xline: bool OR dictionary = True
+    x : float, optional
+        x-axis value of marker, in data coordinates
+    y : float, optional
+        y-axis value of marker, in data coordinates
+    axes : plt.Axes, optional
+        Axes object to add markers to. Default is the current active axes, ``plt.gca()``.
+    ref_marker: artists.AxisLabel, optional
+        reference marker. If provided, the marker will show relative values from the reference marker.
+    xline : bool | dictionary, optional
         shows a vertical line at the x value of the marker. If dictionary, parameters are passed
         into Line2D.
-    yline: bool OR dictionary = False
+    yline : bool | dictionary, optional
         shows a horizontal line at the y value of the marker. If dictionary, parameters are passed
         into Line2D.
-    axisdot: bool OR dictionary = True
-        If True, shows a dot at the data point of the marker. If dictionary, parameters are passed into Line2D
-    xlabel: bool OR dictionary = False
-        shows a text box of the x value of the marker at the bottom of the axes. If dictionary, parameters are passed
-        into axes.text()
-    ylabel: bool OR dictionary = True
-        shows a text box of the y value of the marker at the data point location. If dictionary, parameters are passed
-        into axes.text()
-    yformatter: Callable = None
-        function that returns a string to be placed in the data label given a x and y data coordinate
-            def yformatter(y:float, idx:int) -> str
-    xformatter: Callable = None
-        function that returns a string to be placed in the x-axis label given a x data coordinate
-            def xformatter(x: float) -> str
+    axisdot: bool | dictionary, optional
+        If True, shows a dot where the x and y axis markers meet. If dictionary, parameters are passed into Line2D.
+        Ignored if only xline or yline is enabled.
+    xlabel : bool | dictionary, optional
+        shows a text box of the x value of the marker. If dictionary, parameters are passed into axes.text()
+    ylabel : bool | dictionary, optional
+        shows a text box of the y value of the marker. If dictionary, parameters are passed into axes.text()
+    xformatter : (x: float) -> str, optional
+        function that returns a string to be placed in the x-axis label given a x data coordinate.
+        Also accepts a string formatter (e.g. "{:.4f}").
+    yformatter : (y: float) -> str, optional
+        function that returns a string to be placed in the y-axis label give a y data coordinate.
+        Also accepts a string formatter (e.g. "{:.4f}").
+    placement : {"lower", "upper"}, default: "lower"
+        places axis label on the bottom/left side of the axes if "lower", or on the top/right side if "upper".
 
-    Returns:
-    --------
+    Returns
+    -------
     Marker object
     """
     # get current axes if user did not provide one
@@ -314,6 +318,7 @@ def axis_marker(
     if y is None:
         yline = False if y is None else yline
         ylabel = False if y is None else ylabel
+    # turn off xline by default if y is not given
     elif x is None:
         xline = False if x is None else xline
         xlabel = False if x is None else xlabel
@@ -353,55 +358,53 @@ def scatter_marker(
     y: float = None,
     collection: PathCollection = None,
     axes: plt.Axes = None,
-    call_handler: bool = False,
-    xline: Union[dict, bool] = False,
-    yline: Union[dict, bool] = False,
-    scatterdot: Union[dict, bool] = True,
-    xlabel: Union[dict, bool] = False,
-    ylabel: Union[dict, bool] = True,
-    xformatter: Callable = None,
-    yformatter: Callable = None,
+    xline: bool | dict= False,
+    yline: bool | dict= False,
+    scatterdot: bool | dict = True,
+    xlabel: bool | dict = False,
+    ylabel: bool | dict = True,
+    xformatter: Callable[[float], str] = None,
+    yformatter: Callable[[float, float, int], str] = None,
     anchor: str = "center left",
-) -> artists.DataMarker:
+    call_handler: bool = False,
+) -> artists.ScatterMarker:
     """
     Adds a marker to cartesian scatter plot.
 
     Parameters
     ----------
-    x: float
+    x : float
         x-axis data value of marker
-    y: float (optional)
+    y : float, optional
         y-axis data value
-    collection: list (optional)
+    collection : PathCollection, optional
         PathCollection to attach markers to (returned from plt.scatter()).
         If not provided, uses the first collection found on the axes.
-    axes: plt.Axes (optional)
-        Axes object to add markers to. Defaults to plt.gca()
-    call_handler: bool (optional)
-        if True, calls the marker handler attached to the axes, if it exists. Defaults to False.
-    xline: bool OR dictionary = True
-        If True, shows a vertical line at the x value of the marker. If dictionary, parameters are passed
-        into Line2D.
-    yline: bool OR dictionary = False
-        If True, shows a horizontal line at the y value of the marker. If dictionary, parameters are passed
-        into Line2D.
-    scatterdot: bool OR dictionary = True
+    axes : plt.Axes, optional
+        Axes object to add markers to. Default is the current active axes, ``plt.gca()``.
+    xline : bool | dictionary, optional
+        shows a vertical line at the x value of the marker. If dictionary, parameters are passed into Line2D.
+    yline : bool | dictionary, optional
+        shows a horizontal line at the y value of the marker. If dictionary, parameters are passed into Line2D.
+    scatterdot : bool OR dictionary = True
         If True, shows a dot at the data point of the marker. If dictionary, parameters are passed into Line2D
-    xlabel: bool OR dictionary = False
+    xlabel : bool | dictionary, optional
         If True, shows a text box of the x value of the marker at the bottom of the axes. If dictionary, parameters 
         are passed into axes.text()
-    ylabel: bool OR dictionary = True
+    ylabel : bool | dictionary, optional
         If True, shows a text box of the y value of the marker at the data point location. If dictionary, parameters 
         are passed into axes.text()
-    xformatter: Callable = None
-        function that returns a string to be placed in the x-axis label given a x data coordinate
-            def xformatter(x: float, idx:int) -> str
-    yformatter: Callable = None
-        function that returns a string to be placed in the data label given a x and y data coordinate
-            def yformatter(x: float, y:float, idx:int) -> str
-    anchor: str = None
+    xformatter : (x: float) -> str, optional
+        function that returns a string to be placed in the x-axis label given a x data coordinate. Also accepts
+        a string formatter (e.g. "{:.4f}").
+    yformatter : (x: float, y: float, idx: int) -> str, optional
+        function that returns a string to be placed in the data label given a x, y data coordinate, and the
+        index of the data the marker is located at. Also accepts a string formatter (e.g "{:.4f}").
+    anchor : str = None
         anchor point for the y-axis data labels. One of "upper/lower/center left/right/center". Default is
         "center left"
+    call_handler: bool , default: False
+        if True, calls the marker handler attached to the axes, if it exists. Default is False.
     Returns:
     --------
     Marker object
@@ -461,9 +464,9 @@ def set_style_json(path: Path):
     """
     Sets the style globally on all future markers.
 
-    Parameters:
-    -----------
-    path: Path
+    Parameters
+    ----------
+    path : Path
         path to a .json file that matches the structure of "style/default.json"
     """
 
@@ -475,8 +478,8 @@ def set_style(**properties):
     """
     Sets the style globally on all future markers.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     ** properties
         any or all key value pairs found in "style/default.json"
     """
@@ -497,11 +500,11 @@ def set_style(**properties):
 
 def clear(axes: plt.Axes = None):
     """
-    Removes all markers from axes. To remove a single marker call remove() on Marker object.
+    Removes all markers from axes. To remove a single marker call ``.remove()`` on Marker object.
 
-    Parameters:
+    Parameters
     ----------
-    axes: mpl.Axes (optional)
+    axes : plt.Axes, optional
         matplotlib axes object. Defaults to plt.gca()
     """
     # get current axes if user did not provide one
@@ -553,16 +556,16 @@ def set_active(axes: plt.Axes, marker: artists.MarkerArtist):
     draw_all(axes)
 
 
-def disable_lines(lines: Union[List[Line2D], Line2D], axes: plt.Axes = None):
+def disable_lines(lines: List | Line2D, axes: plt.Axes = None):
     """
-    Disables markers on each of the provided lines for future markers. Existing markers will not be affected.
+    Disables markers on each of the provided lines for all future markers. Existing markers will not be affected.
     To remove existing markers, use .remove() on the Marker object.
 
     Parameters:
     ----------
-    lines: list OR np.ndarray OR Line2D
+    lines : list | np.ndarray | Line2D
         list of Line2D objects that will be ignored by future markers.
-    axes: mpl.Axes (optional)
+    axes : plt.Axes, optional
         matplotlib axes object. Defaults to plt.gca()
     """
     # cast lines provided as numpy array as a list
@@ -593,16 +596,14 @@ def add_handler(
     """
     Sets a callback function that is called whenever the active marker is moved on the given axes.
 
-    Parameters:
-    ---------
-    axes: mpl.Axes
+    Parameters
+    ----------
+    axes : mpl.Axes
         matplotlib axes
-    handler: callable:
-        def handler(xd: float, yd: float, **kwargs) -> None:
-            ...
+    handler : (xd: float, yd: float, **kwargs) -> None
         The xd and yd parameter are arrays of x-axis/y-axis data values of each line on the active marker.
         kwargs are the same as the optional kwargs passed into add_handler.
-    kwargs: dict (Optional)
+    kwargs : dict, optional
         kwargs that will be passed into the handler every time it's called.
     """
     kwargs = {} if kwargs is None else kwargs
@@ -620,17 +621,17 @@ def move_active(
     disp: bool = False,
 ):
     """
-    Moves the active marker to a point along the x-axis.
+    Moves the active marker to a new point.
 
-    Parameters:
+    Parameters
     ----------
-    x: float
-        x-axis value in data coordinates to move the x-marker to.
-    y: float (Optional)
-        y-axis value in data coordinates to move the x-marker to.
-    axes: mpl.Axes
+    x : float
+        x-axis value in data coordinates to move the marker to.
+    y : float (Optional)
+        y-axis value in data coordinates to move the marker to.
+    axes : mpl.Axes
         matplotlib axes object
-    disp: bool (Optional)
+    disp : bool (Optional)
         If True, x and y coordinates are interpreted as display coordinates instead of data coordinates.
     """
     if axes is None:
@@ -654,18 +655,18 @@ def shift_active(axes: plt.Axes, direction: int, call_handler: bool = False):
     """
     Moves the active marker to a point along the x-axis.
 
-    Parameters:
+    Parameters
     ----------
-    axes: mpl.Axes
+    axes : plt.Axes
         matplotlib axes object
-    direction: int
+    direction : int
         incrementally shift active marker along the x-axis left (direction=-1)
         or right (direction=1)
     """
 
     # do nothing if active marker is not a data marker or has no data labels
     m = axes.marker_active
-    if m is None or not isinstance(m, artists.DataMarker):
+    if m is None or not isinstance(m, artists.LineMarker):
         return
     if len(m.data_labels) < 1:
         return
@@ -730,9 +731,9 @@ def draw_all(axes: plt.Axes, blit: bool = True):
 
     Parameters
     ----------
-    axes: mpl.Axes
+    axes : plot.Axes
         matplotlib axes object
-    blit (bool):
+    blit : bool, default: True
         If True, drawn artists will be blitted onto canvas and the background
         image will be updated. If False, the artists will be drawn but the canvas
         will not be updated. Only used if the canvas supports blitting.
@@ -853,21 +854,18 @@ def init_axes(
 
     Parameters
     ----------
-    axes: mpl.Axes
+    axes : mpl.Axes
         matplotlib axes object
-    yformatter: Callable = None
-        function that returns a string to be placed in the data label given a x and y data coordinate
-            def yformatter(x: float, y:float, idx:int) -> str
-    xformatter: Callable = None
-        function that returns a string to be placed in the x-axis label given a x data coordinate
-            def xformatter(x: float, idx:int) -> str
-    handler: callable:
-        def handler(xd: float, yd: float, **kwargs) -> None:
-            ...
-
+    xformatter : (x: float) -> str, optional
+        function that returns a string to be placed in the x-axis label given a x data coordinate.
+        Also accepts a string formatter (e.g. "{:.4f}").
+    yformatter : (y: float) -> str, optional
+        function that returns a string to be placed in the y-axis label give a y data coordinate.
+        Also accepts a string formatter (e.g. "{:.4f}").
+    handler : (xd: float, yd: float, **kwargs) -> None
         The xd and yd parameter are arrays of x-axis/y-axis data values of each line on the active marker.
         kwargs are the same as the optional kwargs passed into add_handler.
-    **properties
+    ** properties
         any or all key value pairs found in style/default.json
 
     """
