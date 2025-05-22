@@ -741,19 +741,7 @@ class LineMarker(MarkerArtist):
         self.axes = axes
         self._anchor = anchor
 
-        # get all lines that have valid data. check if all lines have monotonic x-axis data
-        self._monotonic_xdata = True
-        self.lines = []
-        for ln in lines:
-            # skip lines with no finite values
-            if not np.any(np.isfinite(ln.get_xdata())):
-                continue
-
-            elif self._monotonic_xdata:
-                diff = np.diff(ln.get_xdata())
-                self._monotonic_xdata = np.all(diff > 0) or np.all(diff < 0)
-
-            self.lines += [ln]
+        self.lines = lines
 
         # check that ylines have associated labels or dots
         if yline and not (ylabel or datadot):
@@ -810,21 +798,19 @@ class LineMarker(MarkerArtist):
             if True, x and y are interpreted in display coordinates.
         
         """
+        # check for invalid position combinations
+        if x is None and self.xaxis_label:
+            raise ValueError("x-position is required when a xlabel or xline is attached to a marker.")
         # determine placement mode
-        if idx is not None:
+        elif idx is not None:
             mode = "idx"
         elif disp:
             mode = "xy"
-        # if lines aren't monotonic use both x and y coordinates for placement. using only x is abiguous
-        elif (x and y) and not (self._monotonic_xdata):
-            mode = "xy"
-        # ignore y and use only the x coordinates to place markers if a xaxis label or line is attached
-        elif self.xaxis_label and x is not None:
-            mode = "x"
         elif y is None:
             mode = "x"
         elif x is None:
             mode = "y"
+        # both x and y are given, and there is no xlabel attached to the marker
         else:
             mode = "xy"
 
@@ -856,8 +842,8 @@ class LineMarker(MarkerArtist):
 
                 # find the label with the closest x data point to the target position and place the x-axis marker there
                 nearest_lbl_idx = np.nanargmin(np.abs(self._xd - x))
-                self._xlbl = self._xd[nearest_lbl_idx]
-
+            
+            self._xlbl = self._xd[nearest_lbl_idx]
             self.xaxis_label.set_position(self._xlbl)
 
         # space the labels so they don't overlap

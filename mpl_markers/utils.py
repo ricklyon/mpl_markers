@@ -22,7 +22,7 @@ def label_formatter(
     xd: float,
     yd: float,
     idx: int = None,
-    custom: Callable | str = None,
+    custom: Union[Callable, str] = None,
     mode: str = "x",
     precision: int = "{:.3f}",
 ) -> str:
