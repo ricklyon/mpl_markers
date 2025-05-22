@@ -271,9 +271,6 @@ class LineLabel(MarkerArtist):
         if yline:
             self.yline = MarkerLine(axes=data_line.axes, **yline)
 
-        self._xdata = self.data_line.get_xdata()
-        self._ydata = self.data_line.get_ydata()
-
         artists = [self.yline, self.datadot, self.ylabel]
 
         super().__init__(axes, artists)
@@ -294,18 +291,18 @@ class LineLabel(MarkerArtist):
 
     def set_position_by_index(self, idx):
 
-        self._xdata = self.data_line.get_xdata()
-        self._ydata = self.data_line.get_ydata()
+        xdata = self.data_line.get_xdata()
+        ydata = self.data_line.get_ydata()
 
-        if idx >= len(self._xdata):
-            idx = len(self._xdata) - 1
+        if idx >= len(xdata):
+            idx = len(xdata) - 1
 
         if idx < 0:
             idx = 0
 
         self._idx = idx
-        self._xd = np.real(self._xdata[idx])
-        self._yd = np.real(self._ydata[idx])
+        self._xd = np.real(xdata[idx])
+        self._yd = np.real(ydata[idx])
 
         # pad values in display coordinates (pixels)
         label_xpad = self.axes.figure.dpi / 10 if not self.yline else 0
@@ -343,32 +340,38 @@ class LineLabel(MarkerArtist):
         if self.datadot:
             self.datadot.set_data([self._xd], [self._yd])
 
-    def set_position(self, x: float = None, y: float = None, idx: int = None, disp: bool = False, mode: str = None):
+    def set_position(self, x: float = None, y: float = None, idx: int = None, disp: bool = False):
         """
-        Returns the index of the line data for the point closest to the x,y data values, and the distance in data 
-        coordinates
+        Sets the position of the label to the nearest data point to x/y.
         """
-        if disp:
-            x, y = utils.display2data(self.axes, (x, y))
 
-        if self.axes.name == "polar" and x is not None:
-            x = (x + np.pi) % (2 * np.pi) - np.pi
-
-        # ignore positional arguments based on the placement mode.
-        if mode == "idx":
+        # ignore positional arguments if index is given
+        if idx is not None:
             self.set_position_by_index(idx)
             return
 
-        if mode == "x" and x is not None:
-            dist = np.abs(x - self._xdata)
-        elif mode == "y" and y is not None:
-            dist = np.abs(y - self._ydata)
-        elif x is not None and y is not None:  # placement mode 'xy' requires both arguments
-            dist = np.sqrt((x - self._xdata) ** 2 + (y - self._ydata) ** 2)
+        if disp:
+            # get the line data in display coordinates
+            ln_xy = utils.data2display(self.axes, self.data_line.get_xydata())
+            xdata, ydata = ln_xy.T
         else:
-            raise ValueError(f"Insufficent positional arguments for marker with placement mode: {mode}")
+            if self.axes.name == "polar" and x is not None:
+                x = (x + np.pi) % (2 * np.pi) - np.pi
+            # get line data in data coordinates
+            xdata = self.data_line.get_xdata()
+            ydata = self.data_line.get_ydata()
 
-        # set position to the data point with the smallest error
+        # compute distances from x/y to all data points
+        if x is not None and y is not None: 
+            dist = np.sqrt((x - xdata) ** 2 + (y - ydata) ** 2)
+        elif x is not None:
+            dist = np.abs(x - xdata)
+        elif y is not None:
+            dist = np.abs(y - ydata)
+        else:
+            raise ValueError(f"Insufficient positional arguments for marker.")
+
+        # set position to the data point with the smallest distance
         self.set_position_by_index(np.nanargmin(dist))
 
 
@@ -801,45 +804,41 @@ class LineMarker(MarkerArtist):
         # check for invalid position combinations
         if x is None and self.xaxis_label:
             raise ValueError("x-position is required when a xlabel or xline is attached to a marker.")
-        # determine placement mode
-        elif idx is not None:
-            mode = "idx"
-        elif disp:
-            mode = "xy"
-        elif y is None:
-            mode = "x"
-        elif x is None:
-            mode = "y"
-        # both x and y are given, and there is no xlabel attached to the marker
-        else:
-            mode = "xy"
 
         # save the arguments to update the marker position when the axes bbox changes later
         self._position_args = (x, y, idx, disp)
 
-        # initialize location coordaintes for all markers
+        # initialize location coordinates for all markers
         xd_yd = np.zeros((2, len(self.lines)))
         self._xlbl = None
 
+        # ignore the y position if an xlabel is present, use only the x position
+        if self.xaxis_label:
+            y = None
+
         # place ylabels
-        for ii, lbl in enumerate(self.data_labels):
-            lbl.set_position(x, y, idx, disp, mode)
-            xd_yd[:, ii] = lbl._xd, lbl._yd
+        for i, lbl in enumerate(self.data_labels):
+            lbl.set_position(x, y, idx, disp)
+            # save the actual position of the label in data coordinates
+            xd_yd[:, i] = lbl.xd, lbl.yd
 
         self._xd, self._yd = xd_yd
 
         # place the x-axis label. Since there are multiple lines attached to the same x-line, put this at the line
-        # x coordinate of the ylabel that is closest to x.
+        # data point closest to x.
         if self.xaxis_label:
 
-            if mode == "idx":
+            if idx is not None:
                 nearest_lbl_idx = idx
 
             else:
-                if self.axes.name == "polar":
+                if not disp and self.axes.name == "polar":
                     # wrap xdata between -180 and 180 if axes is polar
                     x = (x + np.pi) % (2 * np.pi) - np.pi
 
+                # convert display coordinates to data
+                if disp:
+                    x, _ = utils.display2data(self.axes, (x, 0))
                 # find the label with the closest x data point to the target position and place the x-axis marker there
                 nearest_lbl_idx = np.nanargmin(np.abs(self._xd - x))
             

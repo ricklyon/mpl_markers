@@ -46,6 +46,7 @@ def line_marker(
     yformatter: Callable[[float, float, int], str] = None,
     anchor: str = "center left",
     call_handler: bool = False,
+    disp: bool = False,
 ) -> artists.LineMarker:
     """
     Add a line marker to cartesian or polar plot.
@@ -154,7 +155,7 @@ def line_marker(
             **properties,
         )
 
-        m.set_position(x[i], y[i], idx[i])
+        m.set_position(x[i], y[i], idx[i], disp=disp)
 
         # append to the axes marker list and set as active marker
         axes.markers.append(m)
@@ -182,6 +183,7 @@ def mesh_marker(
     zformatter: Callable[[float], str] = None,
     anchor: str = "center left",
     call_handler: bool = False,
+    disp: bool = False
 ) -> artists.MeshMarker:
     """
     Adds new marker on a pcolormesh plot.
@@ -264,7 +266,7 @@ def mesh_marker(
         anchor=anchor,
         **properties,
     )
-    m.set_position(x, y)
+    m.set_position(x, y, disp)
 
     # create new marker and append to the axes marker list
     axes.markers.append(m)
