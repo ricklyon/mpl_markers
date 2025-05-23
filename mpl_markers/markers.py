@@ -144,9 +144,10 @@ def line_marker(
         yformatter = axes._marker_yformatter
 
     # create marker(s) on the existing data lines
+    m = []
     for i in range(marker_num):
         
-        m = artists.LineMarker(
+        m_i = artists.LineMarker(
             axes,
             lines,
             xlabel_formatter=xformatter,
@@ -155,18 +156,21 @@ def line_marker(
             **properties,
         )
 
-        m.set_position(x[i], y[i], idx[i], disp=disp)
-
         # append to the axes marker list and set as active marker
-        axes.markers.append(m)
-        axes.marker_active = m
+        axes.markers.append(m_i)
+        axes.marker_active = m_i
+        m += [m_i]
+        m_i.set_position(x[i], y[i], idx[i], disp=disp)
 
     # call the axes handler if it exists
     if axes._marker_handler is not None and call_handler:
         func, params = axes._marker_handler
         func(*axes.marker_active.get_data_points(), **params)
 
-    return m
+    if marker_num == 1:
+        return m[0]
+    else:
+        return m
 
 
 def mesh_marker(
@@ -266,11 +270,11 @@ def mesh_marker(
         anchor=anchor,
         **properties,
     )
-    m.set_position(x, y, disp)
 
     # create new marker and append to the axes marker list
     axes.markers.append(m)
     axes.marker_active = m
+    m.set_position(x, y, disp)
 
     # call the axes handler if it exists
     if axes._marker_handler is not None and call_handler:
@@ -372,11 +376,12 @@ def axis_marker(
         placement=placement,
         **properties,
     )
-    m.set_position(x, y)
 
     # create new marker and append to the axes marker list
     axes.markers.append(m)
     axes.marker_active = m
+
+    m.set_position(x, y)
 
     return m
 
@@ -768,6 +773,8 @@ def draw_all(axes: plt.Axes, blit: bool = True):
     """
     axes = axes._marker_axes
     [m.update_positions() for m in axes.markers]
+
+    utils.deconflict_ylabels(axes)
 
     # some backends (like pdf or svg) do not support blitting since they are not interactive backends.
     # all we have to do here is draw the markers on the canvas.

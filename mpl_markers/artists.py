@@ -403,6 +403,7 @@ class AxisLabel(MarkerArtist):
         self.ylabel_formatter = ylabel_formatter
         self.ref_marker = ref_marker
         self.placement = placement
+        self.adaptive_artists = []
 
         if xline:
             self.xline = MarkerLine(axes=axes, **xline)
@@ -574,6 +575,7 @@ class MeshLabel(MarkerArtist):
         self._xd = None
         self._yd = None
         self._anchor = anchor
+        self.adaptive_artists = []
 
         if zlabel:
             # initalize text box as the label
@@ -740,7 +742,7 @@ class LineMarker(MarkerArtist):
         self.data_labels = []
         artists = []
         self.xaxis_label = None
-        self.ylabel_artists = []
+        self.adaptive_artists = []
         self.axes = axes
         self._anchor = anchor
 
@@ -773,13 +775,13 @@ class LineMarker(MarkerArtist):
         if self.xaxis_label:
             artists += self.xaxis_label._artists[2:]
 
-        # get list of all labels in the marker
+        # get list of all labels in the marker that are  adaptively spaced from other labels
         if ylabel:
-            self.ylabel_artists += [lbl.ylabel for lbl in self.data_labels]
+            self.adaptive_artists += [lbl.ylabel for lbl in self.data_labels if lbl.ylabel is not None]
+        if self.xaxis_label and self.xaxis_label.xlabel is not None:
+            self.adaptive_artists += [self.xaxis_label.xlabel]
 
         self._has_xlabel = self.xaxis_label and self.xaxis_label.xlabel
-
-        self.set_position(0)
 
         super().__init__(axes, artists)
 
@@ -845,110 +847,12 @@ class LineMarker(MarkerArtist):
             self._xlbl = self._xd[nearest_lbl_idx]
             self.xaxis_label.set_position(self._xlbl)
 
-        # space the labels so they don't overlap
-        self._space_labels()
-
     def get_data_points(self):
         return self._xd, self._yd
 
     def update_positions(self):
-        self.set_position(*self._position_args)
-
-    def _space_labels(self):
-        """
-        Prevent vertical overlap on data labels.
-        """
-
-        ax_pad = self.axes.figure.dpi / 10
-        # use half the normal label pad since each label has a pad and it will be doubled
-        # when labels are stacked on top of each oter.
-        label_pad = self.axes.figure.dpi / 20
-
-        # make axes smaller with negative padding
-        ax_bbox = utils.get_artist_bbox(self.axes, (-ax_pad, -ax_pad))
-
-        pad = np.array([label_pad, label_pad])
-        vis_artists = [obj for obj in self.ylabel_artists if not obj._hidden]
-        if not len(vis_artists):
-            return
-
-        sorted_labels = sorted(vis_artists, key=lambda x: utils.get_artist_bbox(x, pad)[0, 1])
-
-        s_bbox = np.array([utils.get_artist_bbox(lbl, pad) for lbl in sorted_labels])
-
-        # get overlap that each box makes with the one above it. use roll to place the upper boxes in the place of its 
-        # lower neighbor
-        bbox_above = np.roll(s_bbox, shift=-1, axis=0)
-        # get overlap that each box makes with the one below it.
-        bbox_below = np.roll(s_bbox, shift=1, axis=0)
-
-        # use roll again to flip the edges so top edge of each box is subtracted from the bottom edge of the upper box.
-        # this computes the overlap each box makes with the one above it.
-        # negative values indicate margin, positive values indicate overlap
-        bbox_ovl_upper = s_bbox - np.roll(bbox_above, 1, axis=1)
-        # this is invalid for the last (top) box since it doesn't have
-        # an upper neighbor.
-        bbox_ovl_upper[-1] = -np.inf
-
-        # overlap of each box with the one below it
-        bbox_ovl_lower = -s_bbox + np.roll(bbox_below, 1, axis=1)
-
-        # lower box overlap is with the xlabel if present
-        if self._has_xlabel:
-            bbox_ovl_lower[0] = -s_bbox[0] + np.roll(utils.get_artist_bbox(self.xaxis_label.xlabel, pad), 1, axis=0)
-        # if there is no xlabel, use the bounding box for the axes
-        else:
-            bbox_ovl_lower[0] = -s_bbox[0] + ax_bbox[0]
-
-        # start from bottom and push labels up to avoid the xlabel marker
-        for ii in range(0, len(s_bbox)):
-
-            # get the amount of overlap with the label below this one
-            pos_ovl = np.clip(bbox_ovl_lower[ii, 0, 1], 0, None)
-
-            # move this label up if there is horizontal overlap. We know there is overlap if the distance
-            # vectors between opposite corners are going different directions.
-            x0, x1 = bbox_ovl_lower[ii, :, 0]
-
-            if np.sign(x0) != np.sign(x1):
-                s_bbox[ii, :, 1] += pos_ovl
-                bbox_ovl_lower[ii, :, 1] -= pos_ovl
-                bbox_ovl_upper[ii, :, 1] += pos_ovl
-
-                if ii > 0:
-                    bbox_ovl_upper[ii - 1, :, 1] -= pos_ovl
-
-                if ii < len(s_bbox) - 1:
-                    # Since we moved this box up, we have to adjust the overlap of the next box.
-                    bbox_ovl_lower[ii + 1, :, 1] += pos_ovl
-
-        bbox_ovl_upper[-1] = s_bbox[-1] - ax_bbox[1]
-        bbox_ovl_upper[-1, :, 0] = np.array([-1, 1])
-
-        # push labels down vertically, starting from middle-1 (since we already moved the middle one up, the middle-1 label has
-        # no overlap with the one above it).
-        for ii in range(len(s_bbox) - 1, -1, -1):
-
-            # amount of overlap this label has with the one above it
-            pos_ovl = np.clip(bbox_ovl_upper[ii, 1, 1], 0, None)
-
-            # move this label down if there is horizontal overlap
-            x0, x1 = bbox_ovl_upper[ii, :, 0]
-            if np.sign(x0) != np.sign(x1):
-
-                s_bbox[ii, :, 1] -= pos_ovl
-                bbox_ovl_upper[ii, :, 1] -= pos_ovl
-                bbox_ovl_lower[ii, :, 1] += pos_ovl
-
-                if ii < len(s_bbox) - 1:
-                    bbox_ovl_lower[ii + 1, :1] -= pos_ovl
-
-                if ii > 0:
-                    # Since we moved this box down down, we have to adjust the overlap of the next box.
-                    bbox_ovl_upper[ii - 1, :, 1] += pos_ovl
-
-        for ii, s in enumerate(sorted_labels):
-            s.set_position(s_bbox[ii, 0] + pad, disp=True, anchor="lower left")
+        # FIX this for markers with multiple lables
+        self.set_position(self._xd, self._yd)
 
 
 class MeshMarker(MarkerArtist):
@@ -982,6 +886,7 @@ class MeshMarker(MarkerArtist):
         self.quadmesh = quadmesh
         self.data_label = None
         self.axes = axes
+        self.adaptive_artists = []
 
         # create single x/y-axes label
         if xline or xlabel or yline or ylabel:
@@ -1073,6 +978,7 @@ class ScatterMarker(MarkerArtist):
         self.yline = None
 
         artists = []
+        self.adaptive_artists = []
 
         # create xline object
         if xline:
@@ -1099,6 +1005,7 @@ class ScatterMarker(MarkerArtist):
             ylabel["bbox"]["edgecolor"] = collection.get_facecolor()[0]
             self.ylabel = MarkerLabel(axes=axes, transform=None, verticalalignment="bottom", **ylabel)
             artists += [self.ylabel]
+            self.adaptive_artists += [self.ylabel]
 
         self.set_position(0, 0)
 
