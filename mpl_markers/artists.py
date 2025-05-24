@@ -61,12 +61,13 @@ class MarkerLabel(AbstractArtist, matplotlib.text.Text):
 
         # this calls the __init__ method for the class in the MRO after AbstractArtist, so mpl.Text
         # let the label be visible outside the axes for polar plots with clip_on=False
-        super(AbstractArtist, self).__init__(0, 0, "0", clip_on=False, **kwargs)
+        super(AbstractArtist, self).__init__(0, 0, "0", transform=None, clip_on=False, **kwargs)
         # call the AbstractArtist init method
         super(MarkerLabel, self).__init__(axes)
 
         # get axes from kwargs and add to axes
         axes.add_artist(self)
+        self._persistent_xy = (0, 0)
 
     def set_position(
         self,
@@ -76,6 +77,7 @@ class MarkerLabel(AbstractArtist, matplotlib.text.Text):
         disp: bool = False,
         offset: Tuple[float, float] = None,
         ax_pad: Tuple[float, float] = None,
+        persist: bool = True,
     ):
         """
         Set label position and text
@@ -165,7 +167,9 @@ class MarkerLabel(AbstractArtist, matplotlib.text.Text):
         # use lower left bbox point for placement
         # AbstractArtist should not have a set_position method, so this will use set_position from mpl.Text
         super().set_position(l_bbox[0])
-
+        if persist:
+            self._persistent_xy = (l_bbox[0])
+        
 
 class MarkerLine(AbstractArtist, Line2D):
 
@@ -185,6 +189,7 @@ class MarkerArtist(object):
 
         self.axes = axes
         self._artists = artists
+        self._label_artists = [a for a in artists if isinstance(a, MarkerLabel)]
         self._dependent_markers = dependent_markers
 
     def remove(self):
@@ -205,6 +210,12 @@ class MarkerArtist(object):
         """Draw each artist associated with marker."""
         [obj.draw_artist() for obj in self._artists if obj]
 
+    def draw_labels(self):
+        [obj.draw_artist() for obj in self._label_artists if obj]
+
+    def draw_others(self):
+        [obj.draw_artist() for obj in self._artists if obj and obj not in self._label_artists]
+
     def set_visible(self, state):
         [obj.set_visible(state) for obj in self._artists if obj]
 
@@ -216,7 +227,6 @@ class MarkerArtist(object):
 
     def add_dependent_marker(self, marker):
         self._dependent_markers.append(marker)
-
 
 class LineLabel(MarkerArtist):
     """
@@ -262,7 +272,7 @@ class LineLabel(MarkerArtist):
             ylabel["bbox"]["edgecolor"] = data_line.get_color()
 
             # initalize text box as the label
-            self.ylabel = MarkerLabel(axes=axes, transform=None, verticalalignment="bottom", **ylabel)
+            self.ylabel = MarkerLabel(axes=axes, verticalalignment="bottom", **ylabel)
 
         if datadot:
             # initalize marker dot at data point
@@ -409,13 +419,13 @@ class AxisLabel(MarkerArtist):
             self.xline = MarkerLine(axes=axes, **xline)
 
         if xlabel:
-            self.xlabel = MarkerLabel(axes=axes, transform=None, verticalalignment="bottom", **xlabel)
+            self.xlabel = MarkerLabel(axes=axes, verticalalignment="bottom", **xlabel)
 
         if yline:
             self.yline = MarkerLine(axes=axes, **yline)
 
         if ylabel:
-            self.ylabel = MarkerLabel(axes=axes, transform=None, verticalalignment="bottom", **ylabel)
+            self.ylabel = MarkerLabel(axes=axes, verticalalignment="bottom", **ylabel)
 
         if axisdot and xline and yline:
             # initalize marker dot at data point
@@ -579,7 +589,7 @@ class MeshLabel(MarkerArtist):
 
         if zlabel:
             # initalize text box as the label
-            self.zlabel = MarkerLabel(axes=axes, transform=None, verticalalignment="bottom", **zlabel)
+            self.zlabel = MarkerLabel(axes=axes, verticalalignment="bottom", **zlabel)
 
         # initalize marker dot at data point
         self.datadot = MarkerLine(
@@ -807,9 +817,6 @@ class LineMarker(MarkerArtist):
         if x is None and self.xaxis_label:
             raise ValueError("x-position is required when a xlabel or xline is attached to a marker.")
 
-        # save the arguments to update the marker position when the axes bbox changes later
-        self._position_args = (x, y, idx, disp)
-
         # initialize location coordinates for all markers
         xd_yd = np.zeros((2, len(self.lines)))
         self._xlbl = None
@@ -847,13 +854,19 @@ class LineMarker(MarkerArtist):
             self._xlbl = self._xd[nearest_lbl_idx]
             self.xaxis_label.set_position(self._xlbl)
 
+        utils.deconflict_ylabels(self.axes, [self])
+
     def get_data_points(self):
         return self._xd, self._yd
 
     def update_positions(self):
-        # FIX this for markers with multiple lables
-        self.set_position(self._xd, self._yd)
 
+        # place ylabels
+        for i, lbl in enumerate(self.data_labels):
+            lbl.set_position(self._xd[i], self._yd[i])
+
+        if self.xaxis_label:
+            self.xaxis_label.set_position(self._xlbl)
 
 class MeshMarker(MarkerArtist):
     """
@@ -1003,7 +1016,7 @@ class ScatterMarker(MarkerArtist):
             # match the ylabel color to the scatter collection color
             ylabel = dcopy(ylabel)
             ylabel["bbox"]["edgecolor"] = collection.get_facecolor()[0]
-            self.ylabel = MarkerLabel(axes=axes, transform=None, verticalalignment="bottom", **ylabel)
+            self.ylabel = MarkerLabel(axes=axes, verticalalignment="bottom", **ylabel)
             artists += [self.ylabel]
             self.adaptive_artists += [self.ylabel]
 
