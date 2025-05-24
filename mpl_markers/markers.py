@@ -793,7 +793,9 @@ def draw_all(axes: plt.Axes, blit: bool = True):
 
     # now draw all the markers on this canvas except the active marker
     [line.axes.draw_artist(line) for line in axes._marker_lines]
-    [m.draw() for m in axes.markers if m != axes.marker_active]
+
+    [m.draw_others() for m in axes.markers if m != axes.marker_active]
+    [m.draw_labels() for m in axes.markers if m != axes.marker_active]
 
     if blit:
         # the active_background has everything drawn on it except the active marker.
