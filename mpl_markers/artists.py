@@ -56,7 +56,7 @@ class AbstractArtist(object):
 
 class MarkerLabel(AbstractArtist, matplotlib.text.Text):
 
-    def __init__(self, axes=None, **kwargs):
+    def __init__(self, axes=None, persistent_y=None, **kwargs):
         # https://stackoverflow.com/questions/9575409/calling-parent-class-init-with-multiple-inheritance-whats-the-right-way
 
         # this calls the __init__ method for the class in the MRO after AbstractArtist, so mpl.Text
@@ -67,7 +67,8 @@ class MarkerLabel(AbstractArtist, matplotlib.text.Text):
 
         # get axes from kwargs and add to axes
         axes.add_artist(self)
-        self._persistent_xy = (0, 0)
+        self._is_fixed = bool(persistent_y is not None)
+        self._persistent_y = persistent_y if persistent_y is not None else 0
 
     def set_position(
         self,
@@ -167,8 +168,9 @@ class MarkerLabel(AbstractArtist, matplotlib.text.Text):
         # use lower left bbox point for placement
         # AbstractArtist should not have a set_position method, so this will use set_position from mpl.Text
         super().set_position(l_bbox[0])
-        if persist:
-            self._persistent_xy = (l_bbox[0])
+
+        if persist and not self._is_fixed:
+            self._persistent_y = l_bbox[0][1]
         
 
 class MarkerLine(AbstractArtist, Line2D):
@@ -284,8 +286,6 @@ class LineLabel(MarkerArtist):
         artists = [self.yline, self.datadot, self.ylabel]
 
         super().__init__(axes, artists)
-        # set to arbitrary position to intialize member variables.
-        self.set_position_by_index(idx=0)
 
     @property
     def idx(self):
@@ -350,7 +350,7 @@ class LineLabel(MarkerArtist):
         if self.datadot:
             self.datadot.set_data([self._xd], [self._yd])
 
-    def set_position(self, x: float = None, y: float = None, idx: int = None, disp: bool = False):
+    def set_position(self, x: float = None, y: float = None, idx: int = None, disp: bool = False, mode: str = "xy"):
         """
         Sets the position of the label to the nearest data point to x/y.
         """
@@ -360,19 +360,24 @@ class LineLabel(MarkerArtist):
             self.set_position_by_index(idx)
             return
 
-        if disp:
-            # get the line data in display coordinates
+        if self.axes.name == "polar" and mode == "x":
+            # use data coordinates to place marker in "x" mode (places markers by angle)
+            if disp:
+                x, _ = utils.display2data(self.axes, (x, y))
+
+            x = (x + np.pi) % (2 * np.pi) - np.pi
+            # get line data in data coordinates
+            xdata, ydata = self.data_line.get_data()
+        # convert line data to display coordinates to match the x/y coords
+        elif disp:
             ln_xy = utils.data2display(self.axes, self.data_line.get_xydata())
             xdata, ydata = ln_xy.T
+        # if x/y are in data coordinates, get the line data in data coordinates
         else:
-            if self.axes.name == "polar" and x is not None:
-                x = (x + np.pi) % (2 * np.pi) - np.pi
-            # get line data in data coordinates
-            xdata = self.data_line.get_xdata()
-            ydata = self.data_line.get_ydata()
+            xdata, ydata = self.data_line.get_data()
 
         # compute distances from x/y to all data points
-        if x is not None and y is not None: 
+        if x is not None and y is not None and mode == "xy": 
             dist = np.sqrt((x - xdata) ** 2 + (y - ydata) ** 2)
         elif x is not None:
             dist = np.abs(x - xdata)
@@ -414,12 +419,18 @@ class AxisLabel(MarkerArtist):
         self.ref_marker = ref_marker
         self.placement = placement
         self.adaptive_artists = []
+        self._polar = axes.name == "polar"
+
+        if (ylabel or yline) and self._polar:
+            raise NotImplementedError("y-axis markers not supported for polar plots")
+        
+        persistent_y = -2**16 if placement == "lower" else 2**16
 
         if xline:
             self.xline = MarkerLine(axes=axes, **xline)
 
         if xlabel:
-            self.xlabel = MarkerLabel(axes=axes, verticalalignment="bottom", **xlabel)
+            self.xlabel = MarkerLabel(axes=axes, verticalalignment="bottom", persistent_y=persistent_y, **xlabel)
 
         if yline:
             self.yline = MarkerLine(axes=axes, **yline)
@@ -437,8 +448,6 @@ class AxisLabel(MarkerArtist):
         artists = [self.xline, self.yline, self.axisdot, self.xlabel, self.ylabel]
         super().__init__(axes, artists)
 
-        self.set_position(0, 0)
-
         if ref_marker:
             ref_marker.add_dependent_marker(self)
 
@@ -450,7 +459,6 @@ class AxisLabel(MarkerArtist):
     ):
 
         self._position_args = (x, y, disp)
-
         dpi = self.axes.figure.dpi
 
         if disp:
@@ -460,7 +468,7 @@ class AxisLabel(MarkerArtist):
         if x is not None:
             # force within axes bounds
 
-            if self.axes.name == "polar":
+            if self._polar:
                 # wrap xdata between -180 and 180 if axes is polar
                 x = (x + np.pi) % (2 * np.pi) - np.pi
             else:
@@ -486,17 +494,13 @@ class AxisLabel(MarkerArtist):
                 xl, yl = utils.data2display(self.axes, (x, self.axes.get_ylim()[ylim_i]))
 
                 self.xlabel.set_position(
-                    (xl, yl),
-                    lbl,
-                    anchor="lower center",
-                    disp=True,
-                    ax_pad=(dpi / 15, dpi / 15),
+                    (xl, yl), lbl, anchor="lower center", disp=True, ax_pad=(dpi / 15, dpi / 15),
                 )
 
             if self.xline:
                 self.xline.set_data([x] * 2, self.axes.get_ylim())
 
-        # set y-axes marker
+        # set y-axis marker
         if y is not None:
             # force within axes bounds
             y = np.clip(y, *self.axes.get_ylim())
@@ -510,29 +514,18 @@ class AxisLabel(MarkerArtist):
                 if self.ref_marker:
                     lbl_yd = self._yd - self.ref_marker._yd
                     lbl_sgn = r"$(\Delta)+$" if lbl_yd > 0 else r"$(\Delta)-$"
+
                     txt = utils.label_formatter(
-                        self.axes,
-                        self._xd,
-                        np.abs(lbl_yd),
-                        custom=self.ylabel_formatter,
-                        mode="y",
+                        self.axes, self._xd, np.abs(lbl_yd), custom=self.ylabel_formatter, mode="y",
                     )
                     lbl = lbl_sgn + txt
                 else:
                     lbl = utils.label_formatter(
-                        self.axes,
-                        self._xd,
-                        self._yd,
-                        custom=self.ylabel_formatter,
-                        mode="y",
+                        self.axes, self._xd, self._yd, custom=self.ylabel_formatter, mode="y",
                     )
 
                 self.ylabel.set_position(
-                    (xl, yl),
-                    lbl,
-                    anchor="center left",
-                    disp=True,
-                    ax_pad=(dpi / 15, dpi / 15),
+                    (xl, yl), lbl, anchor="center left", disp=True, ax_pad=(dpi / 15, dpi / 15),
                 )
 
             if self.yline:
@@ -547,7 +540,7 @@ class AxisLabel(MarkerArtist):
 
     def update_positions(self):
         self.set_position(*self._position_args)
-
+        
 
 class MeshLabel(MarkerArtist):
     """
@@ -664,20 +657,11 @@ class MeshLabel(MarkerArtist):
         if self.zlabel:
             # set the x position to the data point location plus a small pad (in display coordinates)
             txt = utils.label_formatter(
-                self.axes,
-                self._xd,
-                self._zd,
-                self._xidx,
-                self.zlabel_formatter,
-                mode="y",
+                self.axes, self._xd, self._zd, self._xidx, self.zlabel_formatter, mode="y",
             )
 
             self.zlabel.set_position(
-                (xl, yl),
-                txt,
-                anchor=self._anchor,
-                disp=True,
-                offset=(label_pad, label_pad),
+                (xl, yl), txt, anchor=self._anchor, disp=True, offset=(label_pad, label_pad),
             )
 
         if self.datadot:
@@ -795,7 +779,7 @@ class LineMarker(MarkerArtist):
 
         super().__init__(axes, artists)
 
-    def set_position(self, x: float = None, y: float = None, idx: int = None, disp: bool = False):
+    def set_position(self, x: float, y: float = None, idx: int = None, disp: bool = False):
         """
         Set the position of all line markers to the nearest data point to x/y. 
 
@@ -823,16 +807,17 @@ class LineMarker(MarkerArtist):
 
         # ignore the y position if an xlabel is present, use only the x position
         if self.xaxis_label:
-            y = None
+            mode = "x"
+        else:
+            mode = "xy"
 
         # place ylabels
         for i, lbl in enumerate(self.data_labels):
-            lbl.set_position(x, y, idx, disp)
+            lbl.set_position(x, y, idx, disp, mode=mode)
             # save the actual position of the label in data coordinates
             xd_yd[:, i] = lbl.xd, lbl.yd
 
         self._xd, self._yd = xd_yd
-
         # place the x-axis label. Since there are multiple lines attached to the same x-line, put this at the line
         # data point closest to x.
         if self.xaxis_label:
@@ -847,12 +832,13 @@ class LineMarker(MarkerArtist):
 
                 # convert display coordinates to data
                 if disp:
-                    x, _ = utils.display2data(self.axes, (x, 0))
+                    x, _ = utils.display2data(self.axes, (x, y))
+
                 # find the label with the closest x data point to the target position and place the x-axis marker there
                 nearest_lbl_idx = np.nanargmin(np.abs(self._xd - x))
             
             self._xlbl = self._xd[nearest_lbl_idx]
-            self.xaxis_label.set_position(self._xlbl)
+            self.xaxis_label.set_position(x)
 
         utils.deconflict_ylabels(self.axes, [self])
 
