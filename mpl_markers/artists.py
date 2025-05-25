@@ -193,6 +193,7 @@ class MarkerArtist(object):
         self._artists = artists
         self._label_artists = [a for a in artists if isinstance(a, MarkerLabel)]
         self._dependent_markers = dependent_markers
+        self._hidden = False
 
     def remove(self):
         [obj.remove() for obj in self._artists if obj]
@@ -223,6 +224,7 @@ class MarkerArtist(object):
 
     def set_hidden(self, state):
         [obj.set_hidden(state) for obj in self._artists if obj]
+        self._hidden = state
 
     def get_dependent_markers(self):
         return self._dependent_markers
@@ -849,7 +851,8 @@ class LineMarker(MarkerArtist):
 
         # place ylabels
         for i, lbl in enumerate(self.data_labels):
-            lbl.set_position(self._xd[i], self._yd[i])
+            if not lbl._hidden:
+                lbl.set_position(self._xd[i], self._yd[i])
 
         if self.xaxis_label:
             self.xaxis_label.set_position(self._xlbl)

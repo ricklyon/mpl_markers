@@ -162,7 +162,7 @@ def deconflict_ylabels(axes, markers=None):
     """
     padding = axes.figure.dpi / 20
 
-    pad = np.array([padding * 2, padding])
+    pad = np.array([padding, padding])
 
     if markers is None:
         markers = axes.markers
