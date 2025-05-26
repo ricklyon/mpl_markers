@@ -12,6 +12,7 @@
     "xlabel": {
         "fontsize": 8,
         "color": "black",
+        "padding": 0.05,
         "bbox": {
             "boxstyle": "square",
             "facecolor": "white",
@@ -22,6 +23,7 @@
     },
     "ylabel": {
         "fontsize": 8,
+        "padding": 0.05,
         "bbox": {
             "boxstyle": "square",
             "facecolor": "white",
@@ -32,6 +34,7 @@
     },
     "zlabel": {
         "fontsize": 8,
+        "padding": 0.05,
         "bbox": {
             "boxstyle": "square",
             "facecolor": "white",

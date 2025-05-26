@@ -62,9 +62,6 @@ class TestLineMarker(unittest.TestCase):
         m1 = mplm.axis_marker(y=0.032)
         m2 = mplm.line_marker(x=3.4, xlabel=True)
 
-        if SHOW_INTERACTIVE:
-            plt.show()
-
         fig.savefig(self.fig_dir / "test_log_scale.png")
         self.assertEqual(m2.data_labels[0].ylabel.get_text(), "3.24$\\times 10^{-2}$")
 

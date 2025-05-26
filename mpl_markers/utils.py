@@ -73,8 +73,10 @@ def get_artist_bbox(artist, padding: Tuple[float, float] = None):
     """
     Returns the bounding box for the artist in display coordinates, optionally with padding applied
 
-    bbox definition: [x0, y0]
-                        [x1, y1]
+    bbox definition:   
+    [[x0, y0]  
+     [x1, y1]]
+
     (x0, y0) is lower left point of artist, (x1, y1) is upper right corner
     """
     if hasattr(artist.axes.figure.canvas, "get_renderer"):
@@ -155,7 +157,18 @@ def get_label_overlap(a, b, pad):
     return get_bbox_overlap(a_bbox, b_bbox)
 
 def push_bbox(a, b, y_order="ab"):
+    """
+    Returns a new bbox for "a" that is shifted up or down to avoid "b". 
 
+    Parameters
+    ----------
+    a : np.ndarray
+        bbox of label to push
+    b : np.ndarray
+        bbox of label to avoid
+    y_order : {"ab", "ba"}
+        If a should remain below b, use "ab". If a should remain above b, use "ba
+    """
     overlap_x, overlap_y = get_bbox_overlap(a, b, y_order=y_order)
 
     if overlap_y > 0 and overlap_x > 0:
@@ -170,7 +183,11 @@ def push_bbox(a, b, y_order="ab"):
     return a
         
 
-def group_labels_by_xoverlap(labels, pad):
+def group_labels_by_xoverlap(labels: list, pad: tuple) -> dict:
+    """
+    Separates labels into groups into columns. Each label in a group overlap overlaps in the x direction,
+    even if they don't overlap in the y direction. 
+    """
     # make groups of labels with overlapping x bounds, ignore y bounds
     groups = []
 
@@ -209,13 +226,11 @@ def group_labels_by_xoverlap(labels, pad):
     return groups
 
 
-def stack_ylabels(axes, markers=None):
+def stack_ylabels(axes, markers: list=None):
     """
-    
+    Vertically stack overlapping labels associated with markers. If markers is not given, stacks labels for
+    all markers found on the axes.
     """
-    padding = axes.figure.dpi / 20
-
-    pad = np.array([padding, padding])
 
     if markers is None:
         markers = axes.markers
@@ -223,7 +238,13 @@ def stack_ylabels(axes, markers=None):
     # get all adaptive label artists from all markers
     labels = []
     for m in markers:
-        labels += [obj for obj in m.adaptive_artists if not obj._hidden]
+        labels += [obj for obj in m._label_artists if not obj._hidden]
+
+    if not len(labels):
+        return 
+    
+    padding = labels[0]._padding
+    pad = np.array([padding, padding])
 
     groups = group_labels_by_xoverlap(labels, pad)
     # drop the x-bounds, get list of labels in each group

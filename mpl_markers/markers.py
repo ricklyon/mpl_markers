@@ -774,6 +774,7 @@ def draw_all(axes: plt.Axes, blit: bool = True):
     axes = axes._marker_axes
     [m.update_positions() for m in axes.markers]
 
+    # stack any overlaping labels
     utils.stack_ylabels(axes)
 
     # some backends (like pdf or svg) do not support blitting since they are not interactive backends.
@@ -791,9 +792,9 @@ def draw_all(axes: plt.Axes, blit: bool = True):
     # restore the canvas background with no markers or marker lines drawn on it
     axes.figure.canvas.restore_region(axes._all_background)
 
-    # now draw all the markers on this canvas except the active marker
+    # now draw all the lines and markers on this canvas except the active marker
     [line.axes.draw_artist(line) for line in axes._marker_lines]
-
+    # draw marker objects other than labels first so the labels are on top
     [m.draw_others() for m in axes.markers if m != axes.marker_active]
     [m.draw_labels() for m in axes.markers if m != axes.marker_active]
 
