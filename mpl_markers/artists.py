@@ -127,7 +127,7 @@ class MarkerLabel(AbstractArtist, matplotlib.text.Text):
 
         # force label within axes bounds
         if ax_pad is None:
-            ax_pad = [self.axes.figure.dpi / 10] * 2
+            ax_pad = [self.axes.figure.dpi / 15] * 2
 
         # make axes smaller with negative padding
         ax_bbox = utils.get_artist_bbox(self.axes, -np.array(ax_pad))
@@ -317,8 +317,8 @@ class LineLabel(MarkerArtist):
         self._yd = np.real(ydata[idx])
 
         # pad values in display coordinates (pixels)
-        label_xpad = self.axes.figure.dpi / 10 if not self.yline else 0
-        label_ypad = self.axes.figure.dpi / 10
+        label_xpad = self.axes.figure.dpi / 15 if not self.yline else 0
+        label_ypad = self.axes.figure.dpi / 15
 
         # get label position in display coordinates. Use the line axes instead of the class axes since
         # the line may belong to another twinx/y axes and have different scaling.
@@ -842,7 +842,7 @@ class LineMarker(MarkerArtist):
             self._xlbl = self._xd[nearest_lbl_idx]
             self.xaxis_label.set_position(x)
 
-        utils.deconflict_ylabels(self.axes, [self])
+        utils.stack_ylabels(self.axes, [self])
 
     def get_data_points(self):
         return self._xd, self._yd

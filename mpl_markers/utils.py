@@ -154,9 +154,62 @@ def get_label_overlap(a, b, pad):
 
     return get_bbox_overlap(a_bbox, b_bbox)
 
+def push_bbox(a, b, y_order="ab"):
+
+    overlap_x, overlap_y = get_bbox_overlap(a, b, y_order=y_order)
+
+    if overlap_y > 0 and overlap_x > 0:
+        # a is above b, shift a up to avoid b
+        if y_order == "ba":
+            a[:, 1] += overlap_y
+
+        # a is below b, shift a down to avoid b
+        else:
+            a[:, 1] -= overlap_y
+
+    return a
+        
+
+def group_labels_by_xoverlap(labels, pad):
+    # make groups of labels with overlapping x bounds, ignore y bounds
+    groups = []
+
+    for i, a in enumerate(labels):
+        
+        a_x = get_artist_bbox(a, pad)[:, 0]
+        ovl_groups = []
+        # see if a overlaps with any existing groups
+        for i, g in enumerate(groups):
+
+            b_x = g["bounds"]
+            # a is left of b OR a is right of b
+            overlap_x = a_x[1] - b_x[0] if (a_x[0] < b_x[0]) else b_x[1] - a_x[0]
+
+            if overlap_x > 0:
+                # add a to group
+                g["labels"] += [a]
+                g["bounds"] = min([a_x[0], b_x[0]]), max([a_x[1], b_x[1]])
+                ovl_groups += [i]
+
+        # labels can be in multiple groups, merge groups with shared labels
+        if len(ovl_groups) > 1:
+            g0 = groups[ovl_groups[0]]
+            for g_i in ovl_groups[1:]:
+                g = groups[g_i]
+                g0["bounds"] = min([g0["bounds"][0], g["bounds"][0]]), max([g0["bounds"][1], g["bounds"][1]])
+                g0["labels"] += [lbl for lbl in g["labels"] if lbl is not a]
+
+            # remove old groups and add new merged one
+            [groups.pop(g) for g in sorted(ovl_groups[1:], reverse=True)]
+
+        # create a new group if a does not overlap with any existing ones
+        if len(ovl_groups) < 1:
+            groups += [dict(labels=[a], bounds=get_artist_bbox(a, pad)[:, 0])]
+
+    return groups
 
 
-def deconflict_ylabels(axes, markers=None):
+def stack_ylabels(axes, markers=None):
     """
     
     """
@@ -172,37 +225,15 @@ def deconflict_ylabels(axes, markers=None):
     for m in markers:
         labels += [obj for obj in m.adaptive_artists if not obj._hidden]
 
+    groups = group_labels_by_xoverlap(labels, pad)
+    # drop the x-bounds, get list of labels in each group
+    groups = [g["labels"] for g in groups]
+
     # make axes smaller with negative padding
-    ax_bbox = get_artist_bbox(axes, (-padding, -padding))
+    ax_bbox = get_artist_bbox(axes, (-padding / 2, -padding / 2))
 
-    # make groups of labels with overlapping x bounds, ignore y bounds for now
-    groups = []
-    free_labels = list(labels)
-
-    for i, a in enumerate(labels):
-        for b in free_labels:
-
-            if a == b:
-                continue
-
-            overlap_x, overlap_y = get_label_overlap(a, b, pad)
-
-            if overlap_x > 0:
-                free_labels.remove(b)
-
-                if a in free_labels:
-                    free_labels.remove(a)
-                    # create new group since both a and b are free
-                    groups += [(a, b)]
-                else:
-                    # get the group index where a belongs and add b to the same group
-                    group_idx = [j for j, g in enumerate(groups) if a in g][0]
-                    groups[group_idx] += (b,)
-
-    # create groups with a single label for all left over free labels
-    groups += [[lbl] for lbl in free_labels]
-    
     for g in groups:
+
         if len(g) < 2:
             continue
 
@@ -222,14 +253,10 @@ def deconflict_ylabels(axes, markers=None):
 
             for j in range(i + 1):
                 
+                b = a - (j + 1)
                 # a is above b
-                overlap_x, overlap_y = get_bbox_overlap(g_bbox[a], g_bbox[a - (j + 1)], y_order="ba")
-
-                # if overlap is positive, shift a up to remove overlap
-                if overlap_y > 0 and overlap_x > 0:
-                    g_bbox[a, :, 1] += overlap_y
-                    break
-
+                push_bbox(g_bbox[a], g_bbox[b], y_order="ba")
+                    
         # start again in the middle, this time pushing labels down
         for i in range(g_mid):
 
@@ -237,51 +264,47 @@ def deconflict_ylabels(axes, markers=None):
             a = g_mid - i - 1
 
             for j in range(i + 1):
+
+                b = a + (j + 1)
                 # a is below b
-                overlap_x, overlap_y = get_bbox_overlap(g_bbox[a], g_bbox[a + (j + 1)], y_order="ab")
-
-                # if overlap is positive, shift b down to remove overlap
-                if overlap_y > 0 and overlap_x > 0:
-                    g_bbox[a, :, 1] -= overlap_y
-                    break
+                push_bbox(g_bbox[a], g_bbox[b], y_order="ab")
     
-        # # start from the top and push labels down if there is overlap with the top axes
-        ax_overlap_top =  g_bbox[-1][1, 1] - ax_bbox[1, 1]
+        # start from the top and push labels down if there is overlap with the top axes
 
-        if ax_overlap_top > 0:
-            g_bbox[-1, :, 1] -= ax_overlap_top
-
-            for i in range(len(g) - 1):
-
-                a = len(g) - i - 2
+        for i in range(len(g)):
+            a = len(g) -i - 1
             
-                for j in range(i + 1):
-                    # a is below b
-                    overlap_x, overlap_y = get_bbox_overlap(g_bbox[a], g_bbox[a + (j + 1)], y_order="ab")
-
-                    # if overlap is positive, shift b down to remove overlap
-                    if overlap_y > 0 and overlap_x > 0:
-                        g_bbox[a, :, 1] -= overlap_y
-                        break
+            ax_overlap_top =  g_bbox[a][1, 1] - ax_bbox[1, 1]
+            
+            if ax_overlap_top > 0:
+                g_bbox[a, :, 1] -= ax_overlap_top
         
-        # start from the bottom and push labels up if there is overlap with the bottom axes
-        ax_overlap_btm =  ax_bbox[0, 1] - g_bbox[0][0, 1]
-        
-        if ax_overlap_btm > 0:
-            g_bbox[0, :, 1] += ax_overlap_btm
+            for j in range(i + 1):
 
-            for i in range(len(g) - 1):
+                b = a + (j + 1)
+                if b > (len(g) - 1):
+                    break
 
-                a = 1 + i
+                # a is below b
+                push_bbox(g_bbox[a], g_bbox[b], y_order="ab")
 
-                for j in range(i + 1):
-                    # a is above b
-                    overlap_x, overlap_y = get_bbox_overlap(g_bbox[a], g_bbox[a - (j + 1)], y_order="ba")
 
-                    # if overlap is positive, shift a up to remove overlap
-                    if overlap_y > 0 and overlap_x > 0:
-                        g_bbox[a, :, 1] += overlap_y
-                        break
+        for i in range(len(g)):
+            a = i
+            # start from the bottom and push labels up if there is overlap with the bottom axes
+            ax_overlap_btm =  ax_bbox[0, 1] - g_bbox[a][0, 1]
+
+            if ax_overlap_btm > 0:
+                g_bbox[a, :, 1] += ax_overlap_btm
+
+            for j in range(i + 1):
+
+                b = a - (j + 1)
+                if b < 0:
+                    break
+
+                # a is above b
+                push_bbox(g_bbox[a], g_bbox[b], y_order="ba")
 
         # set the positions for all labels in the group
         for i, lbl in enumerate(sorted_g):

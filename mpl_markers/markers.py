@@ -774,7 +774,7 @@ def draw_all(axes: plt.Axes, blit: bool = True):
     axes = axes._marker_axes
     [m.update_positions() for m in axes.markers]
 
-    utils.deconflict_ylabels(axes)
+    utils.stack_ylabels(axes)
 
     # some backends (like pdf or svg) do not support blitting since they are not interactive backends.
     # all we have to do here is draw the markers on the canvas.
