@@ -4,7 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 from parameterized import parameterized
-from test_variables import SHOW_INTERACTIVE
+from test_variables import SHOW_INTERACTIVE, UPDATE_REFERENCES
+import warnings
 
 FIG_NAMES = ("test_mesh.png",)
 
@@ -17,6 +18,10 @@ class TestMeshMarkers(unittest.TestCase):
         cls.fig_dir.mkdir(exist_ok=True)
 
         cls.ref_fig_dir = Path(__file__).parent / "reference_figures"
+
+        if UPDATE_REFERENCES:
+            warnings.warn("Updating References!")
+            cls.fig_dir = Path(cls.ref_fig_dir)
 
     @parameterized.expand(FIG_NAMES)
     def test_zfigures(self, figname):

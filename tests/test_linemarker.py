@@ -21,6 +21,9 @@ FIG_NAMES = (
     "test_polar.png",
     "test_polar_nan.png",
     "test_log_scale.png",
+    "test_yline.png",
+    "test_stack_labels_1.png",
+    "test_stack_labels_2.png"
 )
 
 
@@ -36,8 +39,6 @@ class TestLineMarker(unittest.TestCase):
         if UPDATE_REFERENCES:
             warnings.warn("Updating References!")
             cls.fig_dir = Path(cls.ref_fig_dir)
-
-
 
     @parameterized.expand(FIG_NAMES)
     def test_zfigures(self, figname):
@@ -329,7 +330,7 @@ class TestLineMarker(unittest.TestCase):
         ax1.plot(x2, np.cos(x2) ** 2)
         ax1.plot(x2, np.cos(x2))
 
-        m = mplm.line_marker(x=np.pi / 3)
+        m = mplm.line_marker(x=np.pi / 3, xlabel=True)
 
         m_x, m_y = m.get_data_points()
         np.testing.assert_array_almost_equal(m_x, np.pi / 3, decimal=2)
@@ -363,6 +364,34 @@ class TestLineMarker(unittest.TestCase):
         np.testing.assert_array_almost_equal(m2_x, np.abs(np.sin(np.pi / 10)), decimal=2)
 
         fig.savefig(self.fig_dir / "test_polar_nan.png")
+
+    def test_stack_labels(self):
+        fig, ax = plt.subplots(1,1)
+        x1 = np.linspace(-np.pi/2, np.pi/2, 1000)
+
+        ax.plot(x1, np.sin(x1)*np.cos(x1)**2)
+        ax.plot(x1, np.sin(x1)*np.cos(x1))
+
+        ax.set_ylim([-0.42, 0])
+        ax.set_xlim([-1.5, 0.5])
+        m1 = mplm.line_marker(x=[-0.8, -.545], xlabel=True)
+        m2 = mplm.line_marker(x=[-0.012], xlabel=True)
+
+        fig.savefig(self.fig_dir / "test_stack_labels_1.png")
+
+        m2.set_position(x=-0.6)
+
+        fig.savefig(self.fig_dir / "test_stack_labels_2.png")
+
+    def test_yline(self):
+        fig, ax = plt.subplots(1,1)
+        x1 = np.linspace(-5, 5, 101)
+
+        ax.plot(x1, np.arctan(x1))
+        # create line marker
+        mplm.line_marker(x=1, yline=True, xlabel=True)
+
+        fig.savefig(self.fig_dir / "test_yline.png")
 
 
 if __name__ == "__main__":
