@@ -143,7 +143,7 @@ class MarkerLabel(AbstractArtist, matplotlib.text.Text):
 
         if np.any(offset):
             # flip the anchor point to the other side of the label if it extends past the axes limit.
-            # these dictionaries determine how much the label should be shifted to effectively flip the anchor point.
+            # these dictionaries determine how much the label should be shifted to flip the anchor point.
             v_ax_shift = {
                 "upper": ylen + (2 * offset[1]),
                 "center": (ylen / 2) + offset[1],
@@ -151,9 +151,9 @@ class MarkerLabel(AbstractArtist, matplotlib.text.Text):
             }[loc_v]
 
             h_ax_shift = {
-                "left": xlen + (2 * offset[1]),
-                "center": (xlen / 2) + offset[1],
-                "right": xlen + (2 * offset[1]),
+                "left": xlen + (2 * offset[0]),
+                "center": (xlen / 2) + offset[0],
+                "right": xlen + (2 * offset[0]),
             }[loc_h]
 
             # apply the shift to the label bbox
@@ -317,7 +317,7 @@ class LineLabel(MarkerArtist):
         self._yd = np.real(ydata[idx])
 
         # pad values in display coordinates (pixels)
-        label_xpad = self.axes.figure.dpi / 15 if not self.yline else 0
+        label_xpad = self.axes.figure.dpi / 15
         label_ypad = self.axes.figure.dpi / 15
 
         # get label position in display coordinates. Use the line axes instead of the class axes since
@@ -332,7 +332,7 @@ class LineLabel(MarkerArtist):
             self.set_hidden(False)
 
         # set label to left side of axes if yline is active
-        xl = 0 if self.yline else xl
+        xl = self.axes.get_xlim()[0] if self.yline else xl
 
         if self.ylabel:
             # set the x position to the data point location plus a small pad (in display coordinates)
@@ -343,7 +343,7 @@ class LineLabel(MarkerArtist):
                 txt,
                 anchor=self._anchor,
                 disp=True,
-                offset=(label_xpad, label_ypad),
+                offset=(label_xpad, label_ypad) if not self.yline else None,
             )
 
         if self.yline:
@@ -834,13 +834,15 @@ class LineMarker(MarkerArtist):
 
                 # convert display coordinates to data
                 if disp:
-                    x, _ = utils.display2data(self.axes, (x, y))
+                    x, y = utils.display2data(self.axes, (x, y))
+                
+                if mode == "x":
+                    # find the label with the closest x data point to the target position
+                    nearest_lbl_idx = np.nanargmin(np.abs(self._xd - x))
+                else:
+                    nearest_lbl_idx = np.nanargmin(np.sqrt((self._xd - x) ** 2 + (self._yd - y) ** 2))
 
-                # find the label with the closest x data point to the target position and place the x-axis marker there
-                nearest_lbl_idx = np.nanargmin(np.abs(self._xd - x))
-            
-            self._xlbl = self._xd[nearest_lbl_idx]
-            self.xaxis_label.set_position(x)
+            self.xaxis_label.set_position(self._xd[nearest_lbl_idx])
 
         utils.stack_ylabels(self.axes, [self])
 
