@@ -243,7 +243,7 @@ def stack_ylabels(axes, markers: list=None):
     if not len(labels):
         return 
     
-    padding = labels[0]._padding
+    padding = labels[0]._padding * (axes.figure.dpi / 100)
     pad = np.array([padding, padding])
 
     groups = group_labels_by_xoverlap(labels, pad)

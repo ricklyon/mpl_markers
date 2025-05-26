@@ -56,7 +56,7 @@ class AbstractArtist(object):
 
 class MarkerLabel(AbstractArtist, matplotlib.text.Text):
 
-    def __init__(self, axes=None, persistent_y=None, padding=0.05, **kwargs):
+    def __init__(self, axes=None, persistent_y=None, padding=5, offset=0, **kwargs):
         # https://stackoverflow.com/questions/9575409/calling-parent-class-init-with-multiple-inheritance-whats-the-right-way
 
         # this calls the __init__ method for the class in the MRO after AbstractArtist, so mpl.Text
@@ -70,7 +70,8 @@ class MarkerLabel(AbstractArtist, matplotlib.text.Text):
         self._is_fixed = bool(persistent_y is not None)
         self._persistent_y = persistent_y if persistent_y is not None else 0
 
-        self._padding = axes.figure.dpi * padding
+        self._padding = padding
+        self._offset_padding = offset
 
     def set_position(
         self,
@@ -127,7 +128,7 @@ class MarkerLabel(AbstractArtist, matplotlib.text.Text):
         l_bbox = np.array([[b_left, b_lower], [b_left + xlen, b_lower + ylen]])
 
         # force label within axes bounds
-        ax_pad = np.array([self._padding] * 2)
+        ax_pad = np.array([self._padding * (self.axes.figure.dpi / 100)] * 2)
 
         # make axes smaller with negative padding
         ax_bbox = utils.get_artist_bbox(self.axes, -ax_pad)
@@ -333,7 +334,7 @@ class LineLabel(MarkerArtist):
         if self.ylabel:
 
             # pad values in display coordinates (pixels)
-            label_pad = self.ylabel._padding * 2
+            label_pad = self.ylabel._offset_padding * (self.axes.figure.dpi / 100)
 
             # set the x position to the data point location plus a small pad (in display coordinates)
             txt = utils.label_formatter(self.axes, self._xd, self._yd, self._idx, self.ylabel_formatter, mode="y")
@@ -652,7 +653,7 @@ class MeshLabel(MarkerArtist):
 
         if self.zlabel:
             # pad values in display coordinates (pixels)
-            label_pad = self.zlabel._padding * 2
+            label_pad = self.zlabel._padding * (self.axes.figure.dpi / 100)
 
             # set the x position to the data point location plus a small pad (in display coordinates)
             txt = utils.label_formatter(
@@ -1047,7 +1048,7 @@ class ScatterMarker(MarkerArtist):
         if self.ylabel:
 
             # pad values in display coordinates (pixels)
-            label_pad = self.ylabel._padding * 2
+            label_pad = self.ylabel._offset_padding * (self.axes.figure.dpi / 100)
 
             ytxt = utils.label_formatter(
                 self.axes, self._xd, self._yd, self._idx, mode="y", custom=self.ylabel_formatter,
