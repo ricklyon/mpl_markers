@@ -31,7 +31,7 @@ In interactive matplotlib backends (i.e. Qt5Agg), the marker can be dragged to a
 
 ![example1](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example1.gif)
 
-The following keyboard shortcuts are supported (note the mouse must be inside the axes to trigger a keyboard event.)
+The following keyboard shortcuts are supported in interactive mode, (note the mouse must be inside the axes to trigger a keyboard event.)
 
 Action | Keyboard Shortcut           | 
 |--------------------| -------|
@@ -46,8 +46,7 @@ Action | Keyboard Shortcut           |
 When moving markers interactively, the labels of the active marker may overlap with other markers on the axes. To
 stack overlapping markers, redraw the figure with F5. 
 
-Markers can be placed by x position, x/y position, or by the line data index. If index value(s) are given, they 
-will override the x/y positions.
+Markers can be placed by x position, x/y position, or by the line data index. If index value(s) are given, they will override the x/y arguments if they are given.
 
 ```python
 # turn the label outline off, and use a rounded box style instead of the default square
