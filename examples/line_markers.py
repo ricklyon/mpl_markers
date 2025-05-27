@@ -7,7 +7,7 @@ mplm.set_style(
     ylabel=dict(fontfamily="monospace", bbox=dict(linewidth=0, facecolor="white", boxstyle="round4"))
 )
 
-fig, ax = plt.subplots(1,1)
+fig, ax = plt.subplots(1,1, figsize=(5, 4))
 
 x1 = np.linspace(-np.pi/2, np.pi/2, 1000)
 ax.plot(x1, np.sin(x1)*np.cos(x1)**2)

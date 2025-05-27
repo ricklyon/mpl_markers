@@ -260,7 +260,6 @@ def stack_ylabels(axes, markers: list=None):
 
         # sort each label in ascending y order. Use the last xy display coordinates from a set_position call
         # that was not from deconflict labels. This keeps the labels in absolute ascending y order.
-
         sorted_g = sorted(g, key=lambda x: x._persistent_y)
 
         # build an array of all label bboxes
@@ -272,6 +271,7 @@ def stack_ylabels(axes, markers: list=None):
 
             a = g_mid + i
 
+            # push "a" label up if any "b" label below it overlaps 
             for j in range(i + 1):
                 
                 b = a - (j + 1)
@@ -280,10 +280,9 @@ def stack_ylabels(axes, markers: list=None):
                     
         # start again in the middle, this time pushing labels down
         for i in range(g_mid):
-
-            # get bbox for both labels
             a = g_mid - i - 1
 
+            # push "a" label down if any "b" label above it overlaps 
             for j in range(i + 1):
 
                 b = a + (j + 1)
@@ -291,15 +290,15 @@ def stack_ylabels(axes, markers: list=None):
                 push_bbox(g_bbox[a], g_bbox[b], y_order="ab")
     
         # start from the top and push labels down if there is overlap with the top axes
-
         for i in range(len(g)):
             a = len(g) -i - 1
-            
+
+            # move labels that are above the axes bounds down into the axes
             ax_overlap_top =  g_bbox[a][1, 1] - ax_bbox[1, 1]
-            
             if ax_overlap_top > 0:
                 g_bbox[a, :, 1] -= ax_overlap_top
-        
+
+            # push "a" label down if any "b" label above it overlaps 
             for j in range(i + 1):
 
                 b = a + (j + 1)
@@ -309,15 +308,16 @@ def stack_ylabels(axes, markers: list=None):
                 # a is below b
                 push_bbox(g_bbox[a], g_bbox[b], y_order="ab")
 
-
+        # start from the bottom and push labels up if there is overlap with the bottom axes
         for i in range(len(g)):
             a = i
-            # start from the bottom and push labels up if there is overlap with the bottom axes
-            ax_overlap_btm =  ax_bbox[0, 1] - g_bbox[a][0, 1]
 
+            # move labels that are below the axes bounds up into the axes
+            ax_overlap_btm =  ax_bbox[0, 1] - g_bbox[a][0, 1]
             if ax_overlap_btm > 0:
                 g_bbox[a, :, 1] += ax_overlap_btm
 
+            # push "a" label up if any "b" label below it overlaps 
             for j in range(i + 1):
 
                 b = a - (j + 1)
