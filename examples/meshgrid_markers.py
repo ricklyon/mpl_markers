@@ -11,7 +11,7 @@ x, y = np.meshgrid(xy, xy)
 z = np.sin(2 * x) ** 2 + np.cos(5 * y) ** 2
 
 # plot the data with pcolormesh
-fig = plt.figure(dpi=200)
+fig = plt.figure(dpi=100)
 ax = fig.subplots(1, 1)
 m = ax.pcolormesh(x, y, z, vmin=0, vmax=2, cmap="jet")
 plt.colorbar(m)

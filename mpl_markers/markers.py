@@ -37,26 +37,27 @@ def line_marker(
     idx: int = None,
     lines: List[Line2D] = None,
     axes: plt.Axes = None,
-    xline: dict | bool = True,
-    yline: dict | bool = False,
-    datadot: dict | bool = True,
-    xlabel: dict | bool = False,
-    ylabel: dict | bool = True,
+    xline: Union[dict, bool] = None,
+    yline: Union[dict, bool] = False,
+    datadot: Union[dict, bool] = True,
+    xlabel: Union[dict, bool]= False,
+    ylabel: Union[dict, bool] = True,
     xformatter: Callable[[float], str] = None,
     yformatter: Callable[[float, float, int], str] = None,
     anchor: str = "center left",
     call_handler: bool = False,
+    disp: bool = False,
 ) -> artists.LineMarker:
     """
     Add a line marker to cartesian or polar plot.
 
     Parameters
     ----------
-    x : float, optional
+    x : float | list, optional
         x-axis data value of marker
-    y : float, optional
+    y : float | list, optional
         y-axis data value of marker
-    idx : int, optional
+    idx : int | list, optional
         index of line data to place marker at. Overrides x and y arguments.
     lines : list, optional
         list of Line2D objects to attach marker to. If not provided, marker will attach to all lines on the axes.
@@ -87,6 +88,7 @@ def line_marker(
         "center left"
     call_handler : bool, default: False
         if True, calls the marker handler attached to the axes after adding the marker, if it exists. Default is False.
+
     Returns
     -------
     artists.LineMarker
@@ -105,6 +107,29 @@ def line_marker(
     if not len(lines):
         return None
 
+    # cast position arguments to arrays
+    x = np.atleast_1d(x)
+    y = np.atleast_1d(y)
+    idx = np.atleast_1d(idx)
+
+    # broadcast positions (including single float values) to identical shapes. 
+    marker_num = max([len(x), len(y), len(idx)])
+    x = np.broadcast_to(x, marker_num).copy()
+    y = np.broadcast_to(y, marker_num).copy()
+    idx = np.broadcast_to(idx, marker_num).copy()
+
+    # check if all lines have monotonic x-axis data vectors. 
+    monotonic_xdata = True
+    for ln in lines:
+        if monotonic_xdata:
+            diff = np.diff(ln.get_xdata())
+            monotonic_xdata = np.all(diff > 0) or np.all(diff < 0)
+
+    # turn the xline off by default if more than 2 markers are added or any line x-axis data is not monotonic.
+    # xlabel is already off by default
+    if xline is None:
+        xline = True if marker_num < 3 and monotonic_xdata else False
+
     # compile artist properties from user provided values or the defaults
     properties = utils.compile_properties(
         axes,
@@ -118,44 +143,51 @@ def line_marker(
     if yformatter is None and axes._marker_yformatter:
         yformatter = axes._marker_yformatter
 
-    # create marker on the existing data lines
-    m = artists.LineMarker(
-        axes,
-        lines,
-        xlabel_formatter=xformatter,
-        ylabel_formatter=yformatter,
-        anchor=anchor,
-        **properties,
-    )
+    # create marker(s) on the existing data lines
+    m = []
+    for i in range(marker_num):
+        
+        m_i = artists.LineMarker(
+            axes,
+            lines,
+            xlabel_formatter=xformatter,
+            ylabel_formatter=yformatter,
+            anchor=anchor,
+            **properties,
+        )
 
-    m.set_position(x, y, idx)
-
-    # create new marker and append to the axes marker list
-    axes.markers.append(m)
-    axes.marker_active = m
+        # append to the axes marker list and set as active marker
+        axes.markers.append(m_i)
+        axes.marker_active = m_i
+        m += [m_i]
+        m_i.set_position(x[i], y[i], idx[i], disp=disp)
 
     # call the axes handler if it exists
     if axes._marker_handler is not None and call_handler:
         func, params = axes._marker_handler
         func(*axes.marker_active.get_data_points(), **params)
 
-    return m
+    if marker_num == 1:
+        return m[0]
+    else:
+        return m
 
 
 def mesh_marker(
     x: float = None,
     y: float = None,
     axes: plt.Axes = None,
-    xline: bool | dict = True,
-    yline: bool | dict= True,
-    xlabel: bool | dict = False,
-    ylabel: bool | dict = False,
-    zlabel: bool | dict= True,
+    xline: Union[dict, bool] = True,
+    yline: Union[dict, bool] = True,
+    xlabel: Union[dict, bool] = False,
+    ylabel: Union[dict, bool] = False,
+    zlabel: Union[dict, bool] =  True,
     xformatter: Callable[[float], str] = None,
     yformatter: Callable[[float], str] = None,
     zformatter: Callable[[float], str] = None,
     anchor: str = "center left",
     call_handler: bool = False,
+    disp: bool = False
 ) -> artists.MeshMarker:
     """
     Adds new marker on a pcolormesh plot.
@@ -238,11 +270,11 @@ def mesh_marker(
         anchor=anchor,
         **properties,
     )
-    m.set_position(x, y)
 
     # create new marker and append to the axes marker list
     axes.markers.append(m)
     axes.marker_active = m
+    m.set_position(x, y, disp)
 
     # call the axes handler if it exists
     if axes._marker_handler is not None and call_handler:
@@ -257,11 +289,11 @@ def axis_marker(
     y: float = None,
     axes: plt.Axes = None,
     ref_marker: artists.AxisLabel = None,
-    xline: bool | dict = None,
-    yline: bool | dict = None,
-    axisdot: bool | dict = None,
-    xlabel: bool | dict = None,
-    ylabel: bool | dict= None,
+    xline: Union[dict, bool] = None,
+    yline: Union[dict, bool] = None,
+    axisdot: Union[dict, bool] = None,
+    xlabel: Union[dict, bool] = None,
+    ylabel: Union[dict, bool] = None,
     xformatter: Callable[[float], str] = None,
     yformatter: Callable[[float], str] = None,
     placement: str = "lower",
@@ -344,11 +376,12 @@ def axis_marker(
         placement=placement,
         **properties,
     )
-    m.set_position(x, y)
 
     # create new marker and append to the axes marker list
     axes.markers.append(m)
     axes.marker_active = m
+
+    m.set_position(x, y)
 
     return m
 
@@ -358,11 +391,11 @@ def scatter_marker(
     y: float = None,
     collection: PathCollection = None,
     axes: plt.Axes = None,
-    xline: bool | dict= False,
-    yline: bool | dict= False,
-    scatterdot: bool | dict = True,
-    xlabel: bool | dict = False,
-    ylabel: bool | dict = True,
+    xline: Union[dict, bool] = False,
+    yline: Union[dict, bool] = False,
+    scatterdot: Union[dict, bool] = True,
+    xlabel: Union[dict, bool] = False,
+    ylabel: Union[dict, bool] = True,
     xformatter: Callable[[float], str] = None,
     yformatter: Callable[[float, float, int], str] = None,
     anchor: str = "center left",
@@ -556,7 +589,7 @@ def set_active(axes: plt.Axes, marker: artists.MarkerArtist):
     draw_all(axes)
 
 
-def disable_lines(lines: List | Line2D, axes: plt.Axes = None):
+def disable_lines(lines: Union[List, Line2D], axes: plt.Axes = None):
     """
     Disables markers on each of the provided lines for all future markers. Existing markers will not be affected.
     To remove existing markers, use .remove() on the Marker object.
@@ -741,6 +774,9 @@ def draw_all(axes: plt.Axes, blit: bool = True):
     axes = axes._marker_axes
     [m.update_positions() for m in axes.markers]
 
+    # stack any overlaping labels
+    utils.stack_ylabels(axes)
+
     # some backends (like pdf or svg) do not support blitting since they are not interactive backends.
     # all we have to do here is draw the markers on the canvas.
     if not axes.figure.canvas.supports_blit:
@@ -749,16 +785,18 @@ def draw_all(axes: plt.Axes, blit: bool = True):
         interactive.canvas_draw(axes.figure)
         return
 
-    # raise error if marker_init_canvas has not been called yet
+    # initialize the canvas if not already 
     if axes._all_background is None:
         init_canvas(axes.figure)
 
     # restore the canvas background with no markers or marker lines drawn on it
     axes.figure.canvas.restore_region(axes._all_background)
 
-    # now draw all the markers on this canvas except the active marker
+    # now draw all the lines and markers on this canvas except the active marker
     [line.axes.draw_artist(line) for line in axes._marker_lines]
-    [m.draw() for m in axes.markers if m != axes.marker_active]
+    # draw marker objects other than labels first so the labels are on top
+    [m.draw_others() for m in axes.markers if m != axes.marker_active]
+    [m.draw_labels() for m in axes.markers if m != axes.marker_active]
 
     if blit:
         # the active_background has everything drawn on it except the active marker.
@@ -927,10 +965,12 @@ def init_axes(
 
     # compile list of all lines in this axes and any axes that share the same canvas
     lines_unfiltered = list(axes.lines) + list(itertools.chain.from_iterable([ax.lines for ax in axes._secondary_axes]))
-    # filter out lines with 2 or fewer data points (straight lines, or single markers)
-    axes._marker_lines = [
-        ln for ln in lines_unfiltered if ln not in axes._marker_ignorelines and len(ln.get_xdata()) > 2
-    ]
+
+    # filter out lines with 2 or fewer data points (straight lines, or single markers), and lines with no valid data
+    axes._marker_lines = []
+    for ln in lines_unfiltered:
+        if ln not in axes._marker_ignorelines and len(ln.get_xdata()) > 2 and np.any(np.isfinite(ln.get_xdata())):
+            axes._marker_lines += [ln]
 
     # add handle to top-level axes to figure
     if not hasattr(axes.figure, "_marker_axes"):

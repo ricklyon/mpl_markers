@@ -103,15 +103,16 @@ def onmotion(event):
     """
     Drags the active marker if the left mouse button is held.
     """
-    x = event.xdata
-    y = event.ydata
+    x = event.x
+    y = event.y
+
     axes = get_event_axes(event)
 
     if axes is None or axes.marker_active is None:
         return
 
     if getattr(axes, "_marker_move", False):
-        markers.move_active(x, y, call_handler=True, axes=axes)
+        markers.move_active(x, y, call_handler=True, axes=axes, disp=True)
         markers.draw_active(axes)
 
 
@@ -138,8 +139,8 @@ def onrelease(event):
     Event handler for left mouse button releases. Moves the active marker to the location where button
     was released.
     """
-    x = event.xdata
-    y = event.ydata
+    x = event.x
+    y = event.y
     axes = get_event_axes(event)
 
     if axes is None:
@@ -155,14 +156,14 @@ def onrelease(event):
         # attempt to create a pcolormesh marker if there are no lines on the plot,
         # if the plot doesn't have a colormesh object, this will return None.
         if not len(axes.lines):
-            markers.mesh_marker(x, y, axes=axes)
+            markers.mesh_marker(x, y, axes=axes, disp=True)
         # if there are lines on the plot, create a line marker
         else:
-            markers.line_marker(x, y, axes=axes)
+            markers.line_marker(x, y, axes=axes, disp=True)
         markers.draw_all(axes)
     # move the active marker
     elif active_marker is not None:
-        markers.move_active(x, y, axes=axes, call_handler=True)
+        markers.move_active(x, y, axes=axes, call_handler=True, disp=True)
         markers.draw_active(axes)
     else:
         return
