@@ -31,7 +31,40 @@ In interactive matplotlib backends (i.e. Qt5Agg), the marker can be dragged to a
 
 ![example1](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example1.gif)
 
-Additional markers can be added by using the Shift+Left Mouse button. The active marker can be removed from the plot by pressing the Delete key.
+The following keyboard shortcuts are supported (note the mouse must be inside the axes to trigger a keyboard event.)
+
+Action | Keyboard Shortcut           | 
+|--------------------| -------|
+| Add marker  | Shift + Left Mouse |
+| Remove active marker | Delete |
+| Redraw figure | F5  | 
+| Shift active marker right | Right Arrow |
+| Shift active marker left | Right Arrow |
+| Shift active marker right (10 steps) | Shift + Right Arrow |
+| Shift active marker left (10 steps) | Shift + Left Arrow |
+
+When moving markers interactively, the labels of the active marker may overlap with other markers on the axes. To
+stack overlapping markers, redraw the figure with F5. 
+
+Markers can be placed by x position, x/y position, or by the line data index. If index value(s) are given, they 
+will override the x/y positions.
+
+```python
+# turn the label outline off, and use a rounded box style instead of the default square
+mplm.set_style(
+    ylabel=dict(fontfamily="monospace", bbox=dict(linewidth=0, facecolor="white", boxstyle="round4"))
+)
+
+fig, ax = plt.subplots(1,1)
+x1 = np.linspace(-np.pi/2, np.pi/2, 1000)
+ax.plot(x1, np.sin(x1) * np.cos(x1)**2)
+
+# place markers every 100 points
+mplm.line_marker(idx = np.arange(100, 1000, 100))
+```
+
+![example6](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example6.png)
+
 
 ### Axis Markers
 Axis markers move freely on the canvas and are not attached to data lines. Axis markers can
@@ -124,6 +157,7 @@ The marker style is controlled by the `mpl_markers/style/default.json` file:
     "xlabel": {
         "fontsize": 8,
         "color": "black",
+        "padding": 5,
         "bbox": {
             "boxstyle": "square",
             "facecolor": "white",
@@ -134,6 +168,8 @@ The marker style is controlled by the `mpl_markers/style/default.json` file:
     },
     "ylabel": {
         "fontsize": 8,
+        "padding": 5,
+        "offset": 10,
         "bbox": {
             "boxstyle": "square",
             "facecolor": "white",
@@ -144,6 +180,7 @@ The marker style is controlled by the `mpl_markers/style/default.json` file:
     },
     "zlabel": {
         "fontsize": 8,
+        "padding": 10,
         "bbox": {
             "boxstyle": "square",
             "facecolor": "white",

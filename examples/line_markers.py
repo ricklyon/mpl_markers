@@ -8,7 +8,6 @@ mplm.set_style(
 )
 
 fig, ax = plt.subplots(1,1)
-fig.set_dpi(100)
 
 x1 = np.linspace(-np.pi/2, np.pi/2, 1000)
 ax.plot(x1, np.sin(x1)*np.cos(x1)**2)
