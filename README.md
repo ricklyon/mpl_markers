@@ -31,7 +31,7 @@ In interactive matplotlib backends (i.e. Qt5Agg), the marker can be dragged to a
 
 ![example1](https://raw.githubusercontent.com/ricklyon/mpl_markers/main/docs/img/example1.gif)
 
-The following keyboard shortcuts are supported in interactive mode, (note that the mouse must be inside the axes to trigger a keyboard event)
+The following keyboard shortcuts are supported in interactive mode, (note that the mouse must be inside the axes to register a keyboard event)
 
 Action | Keyboard Shortcut           | 
 |--------------------| -------|
@@ -39,7 +39,7 @@ Action | Keyboard Shortcut           |
 | Remove active marker | Delete |
 | Redraw figure | F5  | 
 | Shift active marker right | Right Arrow |
-| Shift active marker left | Right Arrow |
+| Shift active marker left | Left Arrow |
 | Shift active marker right (10 steps) | Shift + Right Arrow |
 | Shift active marker left (10 steps) | Shift + Left Arrow |
 
