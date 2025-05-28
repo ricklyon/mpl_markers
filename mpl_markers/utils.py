@@ -3,7 +3,6 @@ from matplotlib import ticker
 from typing import Tuple, Union, Callable, List
 import numpy as np
 from copy import deepcopy
-import itertools
 
 
 def data2display(axes, point):
@@ -156,6 +155,7 @@ def get_label_overlap(a, b, pad):
 
     return get_bbox_overlap(a_bbox, b_bbox)
 
+
 def push_bbox(a, b, y_order="ab"):
     """
     Returns a new bbox for "a" that is shifted up or down to avoid "b". 
@@ -185,30 +185,31 @@ def push_bbox(a, b, y_order="ab"):
 
 def group_labels_by_xoverlap(labels: list, pad: tuple) -> dict:
     """
-    Separates labels into groups into columns. Each label in a group overlap overlaps in the x direction,
-    even if they don't overlap in the y direction. 
+    Separates labels into columns that do not overlap in the x direction with other groups. 
+    Labels within a group can be vertically moved without overlapping with labels from other groups. 
     """
-    # make groups of labels with overlapping x bounds, ignore y bounds
+
     groups = []
 
     for i, a in enumerate(labels):
         
         a_x = get_artist_bbox(a, pad)[:, 0]
         ovl_groups = []
-        # see if a overlaps with any existing groups
+        # check if a overlaps with any existing groups
         for i, g in enumerate(groups):
 
             b_x = g["bounds"]
             # a is left of b OR a is right of b
             overlap_x = a_x[1] - b_x[0] if (a_x[0] < b_x[0]) else b_x[1] - a_x[0]
-
+            
+            # if a overlaps in x direction, add to group
             if overlap_x > 0:
                 # add a to group
                 g["labels"] += [a]
                 g["bounds"] = min([a_x[0], b_x[0]]), max([a_x[1], b_x[1]])
                 ovl_groups += [i]
 
-        # labels can be in multiple groups, merge groups with shared labels
+        # labels can fall into multiple groups, merge groups with shared labels
         if len(ovl_groups) > 1:
             g0 = groups[ovl_groups[0]]
             for g_i in ovl_groups[1:]:
@@ -216,7 +217,7 @@ def group_labels_by_xoverlap(labels: list, pad: tuple) -> dict:
                 g0["bounds"] = min([g0["bounds"][0], g["bounds"][0]]), max([g0["bounds"][1], g["bounds"][1]])
                 g0["labels"] += [lbl for lbl in g["labels"] if lbl is not a]
 
-            # remove old groups and add new merged one
+            # remove old groups that were merged into first group
             [groups.pop(g) for g in sorted(ovl_groups[1:], reverse=True)]
 
         # create a new group if a does not overlap with any existing ones
@@ -235,7 +236,7 @@ def stack_ylabels(axes, markers: list=None):
     if markers is None:
         markers = axes.markers
 
-    # get all adaptive label artists from all markers
+    # get all label artists from all markers
     labels = []
     for m in markers:
         labels += [obj for obj in m._label_artists if not obj._hidden]
@@ -243,6 +244,7 @@ def stack_ylabels(axes, markers: list=None):
     if not len(labels):
         return 
     
+    # apply padding from first label to all labels.
     padding = labels[0]._padding * (axes.figure.dpi / 100)
     pad = np.array([padding, padding])
 
