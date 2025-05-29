@@ -740,6 +740,7 @@ class LineMarker(MarkerArtist):
         self._anchor = anchor
         # x position of xlabel
         self._xlbl = None
+        self._line_idx = None
 
         self.lines = lines
 
@@ -796,8 +797,9 @@ class LineMarker(MarkerArtist):
         if x is None and self.xaxis_label:
             raise ValueError("x-position is required when a xlabel or xline is attached to a marker.")
 
-        # initialize location coordinates for all markers
+        # initialize location coordinates for all markers, and the line data index the marker is located at
         xd_yd = np.zeros((2, len(self.lines)))
+        line_idx = np.zeros(len(self.lines), dtype=np.int64)
 
         # ignore the y position if an xlabel is present, use only the x position
         if self.xaxis_label:
@@ -810,8 +812,11 @@ class LineMarker(MarkerArtist):
             lbl.set_position(x, y, idx, disp, mode=mode)
             # save the actual position of the label in data coordinates
             xd_yd[:, i] = lbl.xd, lbl.yd
+            line_idx[i] = lbl._idx
+            
 
         self._xd, self._yd = xd_yd
+        self._line_idx = line_idx
         # place the x-axis label. Since there are multiple lines attached to the same x-line, put this at the line
         # data point closest to x.
         if self.xaxis_label:
@@ -849,7 +854,7 @@ class LineMarker(MarkerArtist):
         # place ylabels
         for i, lbl in enumerate(self.data_labels):
             if not lbl._hidden:
-                lbl.set_position(self._xd[i], self._yd[i])
+                lbl.set_position_by_index(int(self._line_idx[i]))
 
         # place xlabel
         if self.xaxis_label:
