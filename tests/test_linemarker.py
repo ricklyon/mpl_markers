@@ -6,6 +6,9 @@ from pathlib import Path
 from parameterized import parameterized
 from test_variables import SHOW_INTERACTIVE, UPDATE_REFERENCES
 import warnings
+import matplotlib
+
+matplotlib.rc("figure", max_open_warning=False)
 
 FIG_NAMES = (
     "test_nan_values.png",
