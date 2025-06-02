@@ -38,3 +38,10 @@ include = ["mpl_markers"]
 
 [project.urls]
 repository = "https://github.com/ricklyon/mpl_markers"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Treat all warnings as errors
+filterwarnings = [
+    "error",
+]
